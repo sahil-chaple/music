@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>StreamWave · Seamless Music</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="logo" id="logoBtn" style="cursor: pointer;">
+        <i class="fab fa-spotify" style="color: var(--accent);"></i> StreamWave
+      </div>
+      <ul class="nav-menu">
+        <li class="nav-item active" id="homeNavItem"><i class="fas fa-home"></i> Home</li>
+        <li class="nav-item" id="libraryNavItem"><i class="fas fa-book-open"></i> Library</li>
+        <li class="nav-item" id="aboutNavItem"><i class="fas fa-info-circle"></i> About</li>
+      </ul>
+      <div class="playlist-section">
+        <div class="playlist-header">Playlists</div>
+        <div class="playlist-item"><i class="fas fa-heart" style="margin-right: 8px;"></i>Liked Songs</div>
+        <div class="playlist-item"><i class="fas fa-fire" style="margin-right: 8px;"></i>Trending Now</div>
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <main class="main">
+      <!-- GLOBAL TOP BAR -->
+      <div class="top-bar">
+        <div style="display: flex; align-items: center; flex: 1;">
+          <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+          <!-- CENTERED SEARCH BAR -->
+          <div class="search-wrapper" style="margin: 0 auto; width: 400px; max-width: 80%;">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search songs or artists..." autocomplete="off">
+          </div>
+        </div>
+        <div class="user-profile">
+          <button class="theme-toggle" id="themeToggle"><i class="fas fa-sun"></i></button>
+          <div class="user-avatar" id="userAvatar" style="cursor: pointer;">U</div>
+        </div>
+      </div>
+
+      <!-- HOME VIEW -->
+      <div id="homeView" class="view">
+        <h2 class="section-title">Recently Played</h2>
+        <div class="cards-grid" id="songsContainer"></div>
+        
+        </div>
+
+      <!-- LIBRARY VIEW -->
+      <div id="libraryView" class="view" style="display: none;">
+        <button id="backBtn" class="back-btn" style="display: none;">
+          <i class="fas fa-chevron-left"></i> Back to Library
+        </button>
+        
+        <h2 class="section-title" id="libraryTitle">Your Albums</h2>
+        <div class="cards-grid" id="albumGrid"></div>
+
+        <div id="tracklistView" style="display: none;">
+          <div class="album-hero">
+            <img id="detailCover" src="" alt="Album Cover">
+            <div class="album-details">
+              <span class="type-tag">ALBUM</span>
+              <h1 id="detailTitle">Album Title</h1>
+              <p id="detailArtist">Artist Name</p>
+            </div>
+          </div>
+          <div class="track-list" id="trackList"></div>
+        </div>
+      </div>
+
+      <!-- ABOUT VIEW -->
+      <div id="aboutView" class="view" style="display: none;">
+        <div class="about-hero">
+          <h1>Experience Music Like Never Before.</h1>
+          <p>StreamWave is more than just a music player. It's a sanctuary for audiophiles and a stage for your digital collection.</p>
+        </div>
+        
+        <div class="about-grid">
+          <div class="about-card">
+            <i class="fas fa-cloud"></i>
+            <h3>Cloud Dedicated</h3>
+            <p>Integrated with Cloudinary and Firebase to ensure your music is accessible from anywhere in the world.</p>
+          </div>
+          <div class="about-card">
+            <i class="fas fa-bolt"></i>
+            <h3>Lightning Fast</h3>
+            <p>Our optimized streaming engine delivers music instantly without long buffering times.</p>
+          </div>
+          <div class="about-card">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Secure & Private</h3>
+            <p>Authenticated via Firebase, your listening habits and playlists stay yours and yours alone.</p>
+          </div>
+        </div>
+
+        <div class="mission-section">
+          <h2>Our Mission</h2>
+          <p>Our mission is to bridge the gap between your local library and the cloud. We believe that music should be seamless, beautiful, and deeply personal. StreamWave is built by developers who love music, for people who love music.</p>
+        </div>
+      </div>
+      
+      <!-- APP FOOTER -->
+      <footer class="app-footer">
+        <div class="footer-content">
+          <div class="footer-columns">
+            <div class="footer-col">
+              <h4>Company</h4>
+              <a href="#">About</a>
+              <a href="#">Jobs</a>
+              <a href="#">For the Record</a>
+            </div>
+            <div class="footer-col">
+              <h4>Communities</h4>
+              <a href="#">For Artists</a>
+              <a href="#">Developers</a>
+              <a href="#">Advertising</a>
+              <a href="#">Investors</a>
+              <a href="#">Vendors</a>
+            </div>
+            <div class="footer-col">
+              <h4>Useful links</h4>
+              <a href="#">Support</a>
+              <a href="#">Free Mobile App</a>
+            </div>
+          </div>
+          <div class="footer-social">
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div class="footer-legal">
+            <a href="#">Legal</a>
+            <a href="#">Privacy Center</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Cookies</a>
+            <a href="#">About Ads</a>
+          </div>
+          <p class="copyright">&copy; 2026 StreamWave AB</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- PLAYER BAR -->
+  <div class="player-bar">
+    <div class="now-playing">
+      <img id="playerCover" src="https://placehold.co/400x400/333/1ed760?text=Album" alt="cover">
+      <div class="song-info">
+        <div class="song-title" id="playerTitle">Select a song</div>
+        <div class="song-artist" id="playerArtist">—</div>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <div class="control-buttons">
+        <button class="control-btn" id="prevBtn"><i class="fas fa-step-backward"></i></button>
+        <button class="control-btn play-btn" id="playPauseBtn"><i class="fas fa-play"></i></button>
+        <button class="control-btn" id="nextBtn"><i class="fas fa-step-forward"></i></button>
+      </div>
+      <div class="progress-container">
+        <span class="time-display" id="currentTime">0:00</span>
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="time-display" id="durationTime">0:00</span>
+      </div>
+    </div>
+
+    <div class="volume-section">
+      <i class="fas fa-volume-up" style="color: var(--text-secondary);"></i>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8">
+    </div>
+  </div>
+
+  <audio id="audioPlayer" preload="metadata"></audio>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
