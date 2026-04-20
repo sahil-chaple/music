@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="main.css">
 </head>
+
 <body>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="app">
@@ -49,15 +51,15 @@
       <div id="homeView" class="view">
         <h2 class="section-title">Recently Played</h2>
         <div class="cards-grid" id="songsContainer"></div>
-        
-        </div>
+
+      </div>
 
       <!-- LIBRARY VIEW -->
       <div id="libraryView" class="view" style="display: none;">
         <button id="backBtn" class="back-btn" style="display: none;">
           <i class="fas fa-chevron-left"></i> Back to Library
         </button>
-        
+
         <h2 class="section-title" id="libraryTitle">Your Albums</h2>
         <div class="cards-grid" id="albumGrid"></div>
 
@@ -78,14 +80,16 @@
       <div id="aboutView" class="view" style="display: none;">
         <div class="about-hero">
           <h1>Experience Music Like Never Before.</h1>
-          <p>StreamWave is more than just a music player. It's a sanctuary for audiophiles and a stage for your digital collection.</p>
+          <p>StreamWave is more than just a music player. It's a sanctuary for audiophiles and a stage for your digital
+            collection.</p>
         </div>
-        
+
         <div class="about-grid">
           <div class="about-card">
             <i class="fas fa-cloud"></i>
             <h3>Cloud Dedicated</h3>
-            <p>Integrated with Cloudinary and Firebase to ensure your music is accessible from anywhere in the world.</p>
+            <p>Integrated with Cloudinary and Firebase to ensure your music is accessible from anywhere in the world.
+            </p>
           </div>
           <div class="about-card">
             <i class="fas fa-bolt"></i>
@@ -101,10 +105,12 @@
 
         <div class="mission-section">
           <h2>Our Mission</h2>
-          <p>Our mission is to bridge the gap between your local library and the cloud. We believe that music should be seamless, beautiful, and deeply personal. StreamWave is built by developers who love music, for people who love music.</p>
+          <p>Our mission is to bridge the gap between your local library and the cloud. We believe that music should be
+            seamless, beautiful, and deeply personal. StreamWave is built by developers who love music, for people who
+            love music.</p>
         </div>
       </div>
-      
+
       <!-- APP FOOTER -->
       <footer class="app-footer">
         <div class="footer-content">
@@ -183,4 +189,5 @@
   <audio id="audioPlayer" preload="metadata"></audio>
   <script type="module" src="app.js"></script>
 </body>
+
 </html>
