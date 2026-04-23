@@ -35,10 +35,10 @@
       <div class="top-bar">
         <div style="display: flex; align-items: center; flex: 1;">
           <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-          <!-- CENTERED SEARCH BAR -->
           <div class="search-wrapper" style="margin: 0 auto; width: 400px; max-width: 80%;">
-            <i class="fas fa-search"></i>
+            <i class="fas fa-search search-icon"></i>
             <input type="text" id="searchInput" placeholder="Search songs or artists..." autocomplete="off">
+            <button id="micBtn" class="mic-btn" title="Search by voice"><i class="fas fa-microphone"></i></button>
           </div>
         </div>
         <div class="user-profile">
@@ -49,8 +49,17 @@
 
       <!-- HOME VIEW -->
       <div id="homeView" class="view">
-        <h2 class="section-title">Recently Played</h2>
-        <div class="cards-grid" id="songsContainer"></div>
+
+        <!-- Dashboard (Dynamic Shelves) -->
+        <div id="homeDashboard">
+          <!-- Shelves will be injected here by JS -->
+        </div>
+
+        <!-- Search Results (Hidden by default) -->
+        <div id="searchResults" style="display: none;">
+          <h2 class="section-title">Search Results</h2>
+          <div class="cards-grid" id="songsContainer"></div>
+        </div>
 
       </div>
 
@@ -60,8 +69,25 @@
           <i class="fas fa-chevron-left"></i> Back to Library
         </button>
 
-        <h2 class="section-title" id="libraryTitle">Your Albums</h2>
-        <div class="cards-grid" id="albumGrid"></div>
+        <div id="libraryDashboard">
+          <!-- Liked Songs Shelf -->
+          <div class="home-shelf" id="likedShelfWrapper" style="display: none;">
+            <h3 class="shelf-header">Liked Songs</h3>
+            <div class="shelf-row" id="likedGrid"></div>
+          </div>
+
+          <!-- Recently Played Shelf -->
+          <div class="home-shelf" id="recentShelfWrapper" style="display: none;">
+            <h3 class="shelf-header">Recently Played</h3>
+            <div class="shelf-row" id="recentGrid"></div>
+          </div>
+
+          <!-- Albums Grid -->
+          <div class="home-shelf">
+            <h3 class="shelf-header">Your Albums</h3>
+            <div class="cards-grid" id="albumGrid"></div>
+          </div>
+        </div>
 
         <div id="tracklistView" style="display: none;">
           <div class="album-hero">
@@ -78,36 +104,110 @@
 
       <!-- ABOUT VIEW -->
       <div id="aboutView" class="view" style="display: none;">
-        <div class="about-hero">
-          <h1>Experience Music Like Never Before.</h1>
-          <p>StreamWave is more than just a music player. It's a sanctuary for audiophiles and a stage for your digital
-            collection.</p>
-        </div>
+        <div class="about-3d-container">
 
-        <div class="about-grid">
-          <div class="about-card">
-            <i class="fas fa-cloud"></i>
-            <h3>Cloud Dedicated</h3>
-            <p>Integrated with Cloudinary and Firebase to ensure your music is accessible from anywhere in the world.
+          <!-- Custom 3D Logo / Hero Section -->
+          <div class="about-3d-hero">
+            <div class="logo-3d-wrapper">
+              <h1 class="logo-3d-text" data-text="StreamWave">StreamWave</h1>
+              <span class="logo-3d-subtitle">About Us</span>
+            </div>
+            <p class="hero-intro-text">
+              With <strong>StreamWave</strong>, it’s easy to find the right music or podcast for every moment – on your
+              phone, your computer, your tablet and more.
+            </p>
+            <p class="hero-intro-text">
+              There are millions of tracks and episodes. So whether you’re behind the wheel, working out, partying or
+              relaxing, the right music or podcast is always at your fingertips. Choose what you want to listen to, or
+              let StreamWave surprise you.
+            </p>
+            <p class="hero-intro-text highlight">
+              Soundtrack your life with StreamWave. Subscribe or listen for free.
             </p>
           </div>
-          <div class="about-card">
-            <i class="fas fa-bolt"></i>
-            <h3>Lightning Fast</h3>
-            <p>Our optimized streaming engine delivers music instantly without long buffering times.</p>
-          </div>
-          <div class="about-card">
-            <i class="fas fa-shield-alt"></i>
-            <h3>Secure & Private</h3>
-            <p>Authenticated via Firebase, your listening habits and playlists stay yours and yours alone.</p>
-          </div>
-        </div>
 
-        <div class="mission-section">
-          <h2>Our Mission</h2>
-          <p>Our mission is to bridge the gap between your local library and the cloud. We believe that music should be
-            seamless, beautiful, and deeply personal. StreamWave is built by developers who love music, for people who
-            love music.</p>
+          <!-- Divider -->
+
+          <!-- Divider -->
+          <div class="about-divider"></div>
+
+          <!-- Support Section -->
+          <div class="about-section-header left-align">
+            <h2>Customer Service & <span>Support</span></h2>
+          </div>
+
+          <div class="support-grid">
+            <a href="#" class="support-card">
+              <i class="fas fa-life-ring"></i>
+              <h4>Help Site</h4>
+              <p>Check out our help site for answers to your questions and to learn how to get the most out of
+                StreamWave.</p>
+            </a>
+            <a href="#" class="support-card">
+              <i class="fas fa-comments"></i>
+              <h4>Community</h4>
+              <p>Get fast support from expert users, vote on ideas, or simply discuss music with other fans.</p>
+            </a>
+            <a href="#" class="support-card">
+              <i class="fas fa-envelope-open-text"></i>
+              <h4>Contact Us</h4>
+              <p>Contact Customer Support if you don’t find a solution on our site.</p>
+            </a>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="quick-links-bar">
+            <span>Or pick a topic:</span>
+            <a href="#">Advertising section</a>
+            <a href="#">Press section</a>
+            <a href="#">Jobs section</a>
+          </div>
+
+          <!-- Divider -->
+          <div class="about-divider"></div>
+
+          <!-- Global Presence -->
+          <div class="about-section-header">
+            <h2>StreamWave around the <span>world</span></h2>
+            <p>StreamWave USA, Inc. provides the service to users in the United States. StreamWave AB provides the
+              service to users in all other markets.</p>
+          </div>
+
+          <div class="global-offices-wrapper">
+            <div class="global-office highlight">
+              <h4>StreamWave HQ</h4>
+              <p>Regeringsgatan 19<br>SE-111 53 Stockholm<br>Sweden<br>office@streamwave.com</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave USA Inc</h4>
+              <p>4 World Trade Center<br>150 Greenwich Street, 62nd Floor<br>New York, NY 10007<br>USA</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave Ltd</h4>
+              <p>Adelphi Building<br>4 Savoy Place<br>London WC2N 6AT<br>United Kingdom</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave India LLP</h4>
+              <p>Jet Airways - Godrej BKC<br>1st Floor, Bandra Kurla Complex<br>Mumbai 400051<br>India</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave France SAS</h4>
+              <p>48 Rue la Bruyère<br>75009 Paris<br>France</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave Germany</h4>
+              <p>Unter den Linden 10<br>10117 Berlin<br>Germany</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave Spain SL</h4>
+              <p>Paseo de Recoletos, 7-9<br>28004 Madrid<br>Spain</p>
+            </div>
+            <div class="global-office">
+              <h4>StreamWave Canada Inc.</h4>
+              <p>220 Adelaide Street West<br>Toronto Ontario M5H 1W7<br>Canada</p>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -163,10 +263,15 @@
         <div class="song-title" id="playerTitle">Select a song</div>
         <div class="song-artist" id="playerArtist">—</div>
       </div>
+      <button class="like-btn" id="playerLikeBtn" style="display: none;" title="Save to Liked Songs">
+        <i class="far fa-heart"></i>
+      </button>
     </div>
 
     <div class="player-controls">
       <div class="control-buttons">
+        <button class="control-btn shuffle-btn" id="shuffleBtn" title="Shuffle: On"><i
+            class="fas fa-random"></i></button>
         <button class="control-btn" id="prevBtn"><i class="fas fa-step-backward"></i></button>
         <button class="control-btn play-btn" id="playPauseBtn"><i class="fas fa-play"></i></button>
         <button class="control-btn" id="nextBtn"><i class="fas fa-step-forward"></i></button>
@@ -183,6 +288,19 @@
     <div class="volume-section">
       <i class="fas fa-volume-up" style="color: var(--text-secondary);"></i>
       <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8">
+    </div>
+  </div>
+
+  <!-- INFO MODAL -->
+  <div class="info-modal-overlay" id="infoModalOverlay">
+    <div class="info-modal">
+      <div class="info-modal-header">
+        <h2 id="infoModalTitle">Information</h2>
+        <button class="info-modal-close" id="infoModalClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="info-modal-content" id="infoModalContent">
+        <!-- Content gets injected here -->
+      </div>
     </div>
   </div>
 
