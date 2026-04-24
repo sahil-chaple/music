@@ -22,7 +22,6 @@ import { songs, albums } from './songs-data.js';
 
   // Layout
   const userAvatar = document.getElementById('userAvatar');
-  const themeToggle = document.getElementById('themeToggle');
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -579,9 +578,13 @@ import { songs, albums } from './songs-data.js';
           <button id="addSongsToPlBtn" class="modal-btn modal-btn-primary" style="padding: 6px 16px; font-size: 12px;">
             <i class="fas fa-plus"></i> Add Songs
           </button>
+          <button id="deletePlaylistBtn" class="modal-btn" style="padding: 6px 16px; font-size: 12px; background: rgba(255, 68, 68, 0.1); border: 1px solid #ff4444; color: #ff4444; cursor: pointer; transition: all 0.2s;">
+            <i class="fas fa-trash-alt"></i> Delete
+          </button>
         </div>
       `;
       document.getElementById('addSongsToPlBtn').onclick = () => openAddSongsToPlaylistModal(playlistId);
+      document.getElementById('deletePlaylistBtn').onclick = () => deletePlaylist(playlistId);
     } else {
       detailArtist.textContent = `${categorySongs.length} Songs`;
     }
@@ -597,7 +600,10 @@ import { songs, albums } from './songs-data.js';
           <div class="track-name">${song.title}</div>
           <div class="track-artist">${song.artist}</div>
         </div>
-        <div class="track-duration" id="dur-${song.id}">—</div>
+        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
+          <div class="track-duration" id="dur-${song.id}">—</div>
+          ${playlistId ? `<button class="remove-track-btn" data-song-id="${song.id}" title="Remove from playlist"><i class="fas fa-minus-circle"></i></button>` : ''}
+        </div>
       </div>
     `).join('');
 
@@ -615,11 +621,23 @@ import { songs, albums } from './songs-data.js';
     });
 
     document.querySelectorAll('.track-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        // If clicking the remove button, don't play the song
+        if (e.target.closest('.remove-track-btn')) return;
+
         const songId = parseInt(item.dataset.songId);
         const index = songs.findIndex(s => s.id === songId);
         loadSong(index);
         playPause();
+      });
+    });
+
+    // Add listeners for remove buttons
+    document.querySelectorAll('.remove-track-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const songId = parseInt(btn.dataset.songId);
+        removeSongFromPlaylist(playlistId, songId, title);
       });
     });
   }
@@ -670,7 +688,7 @@ import { songs, albums } from './songs-data.js';
         songListContainer.querySelectorAll('.add-song-item').forEach(item => {
           item.onclick = () => {
             const songId = parseInt(item.dataset.songId);
-            playlist.songIds.push(songId);
+            playlist.songIds.unshift(songId);
             savePlaylistsToStorage();
             
             item.style.opacity = '0.5';
@@ -824,6 +842,56 @@ import { songs, albums } from './songs-data.js';
     }
   }
 
+  function deletePlaylist(plId) {
+    const playlist = userPlaylists.find(p => p.id === plId);
+    if (!playlist) return;
+
+    infoModalTitle.textContent = "Delete Playlist";
+    infoModalContent.innerHTML = `
+      <div style="padding: 20px; text-align: center;">
+        <div style="font-size: 50px; color: #ff4444; margin-bottom: 20px;">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 style="margin-bottom: 10px; font-size: 20px;">Are you sure?</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 30px; line-height: 1.5;">
+          You are about to delete "<strong>${playlist.name}</strong>". This action cannot be undone and all songs in this playlist will be removed from this collection.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+          <button id="cancelDeleteBtn" class="modal-btn modal-btn-secondary" style="padding: 10px 25px;">Cancel</button>
+          <button id="confirmDeleteBtn" class="modal-btn" style="padding: 10px 25px; background: #ff4444; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer;">Delete Playlist</button>
+        </div>
+      </div>
+    `;
+
+    infoModalOverlay.classList.add('active');
+
+    document.getElementById('cancelDeleteBtn').onclick = () => {
+      infoModalOverlay.classList.remove('active');
+    };
+
+    document.getElementById('confirmDeleteBtn').onclick = () => {
+      userPlaylists = userPlaylists.filter(p => p.id !== plId);
+      savePlaylistsToStorage();
+      renderSidebarPlaylists();
+      
+      infoModalOverlay.classList.remove('active');
+      switchView('library');
+      console.log('Playlist deleted:', plId);
+    };
+  }
+
+  function removeSongFromPlaylist(plId, songId, plName) {
+    const playlist = userPlaylists.find(p => p.id === plId);
+    if (!playlist) return;
+    
+    playlist.songIds = playlist.songIds.filter(id => id !== songId);
+    savePlaylistsToStorage();
+    
+    // Refresh the view with updated list
+    const updatedSongs = playlist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+    showCategoryTracks(plName, updatedSongs, plId);
+  }
+
   function openAddToPlaylistModal() {
     const currentSong = songs[currentSongIndex];
     if (!currentSong) return;
@@ -867,7 +935,7 @@ import { songs, albums } from './songs-data.js';
         const playlist = userPlaylists.find(p => p.id === plId);
         if (playlist) {
           if (!playlist.songIds.includes(currentSong.id)) {
-            playlist.songIds.push(currentSong.id);
+            playlist.songIds.unshift(currentSong.id);
             savePlaylistsToStorage();
             alert(`Added "${currentSong.title}" to "${playlist.name}"`);
           } else {
@@ -1022,7 +1090,7 @@ import { songs, albums } from './songs-data.js';
       playerLikeBtn.innerHTML = '<i class="far fa-heart"></i>';
       playerLikeBtn.classList.remove('liked');
     } else {
-      likedSongs.push(song.id);
+      likedSongs.unshift(song.id);
       playerLikeBtn.innerHTML = '<i class="fas fa-heart"></i>';
       playerLikeBtn.classList.add('liked');
     }
@@ -1142,11 +1210,6 @@ import { songs, albums } from './songs-data.js';
 
     searchInput.addEventListener('input', (e) => handleSearch(e.target.value));
 
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('light');
-      themeToggle.querySelector('i').className = document.body.classList.contains('light') ? 'fas fa-moon' : 'fas fa-sun';
-    });
-
     menuToggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
       sidebarOverlay.classList.toggle('active');
@@ -1185,7 +1248,8 @@ import { songs, albums } from './songs-data.js';
     logoBtn.addEventListener('click', () => switchView('home'));
 
     // User Avatar Click
-    userAvatar.addEventListener('click', () => {
+    userAvatar.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent immediate closing
       const existing = document.querySelector('.user-dropdown');
       if (existing) {
         existing.remove();
@@ -1198,11 +1262,40 @@ import { songs, albums } from './songs-data.js';
         <div class="user-info">
           <div class="user-name">${userAvatar.title || 'User'}</div>
         </div>
-        <div class="dropdown-item" id="logoutItem"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        <div class="dropdown-item" id="profileItem"><i class="fas fa-user"></i> Profile</div>
+        <div class="dropdown-item" id="supportItem"><i class="fas fa-life-ring"></i> Support</div>
+        <div class="dropdown-item" id="themeMenuItem">
+          <i class="fas fa-adjust"></i> 
+          Theme: ${document.body.classList.contains('light') ? 'Light' : 'Dark'}
+        </div>
+        <div class="dropdown-item" id="settingsItem"><i class="fas fa-cog"></i> Settings</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" id="logoutItem" style="color: #ff4444;"><i class="fas fa-sign-out-alt"></i> Logout</div>
       `;
       document.body.appendChild(menu);
 
+      // Handle item clicks
       document.getElementById('logoutItem').addEventListener('click', handleLogout);
+      
+      document.getElementById('themeMenuItem').addEventListener('click', () => {
+        document.body.classList.toggle('light');
+        menu.remove(); // Close menu after change
+      });
+
+      document.getElementById('profileItem').addEventListener('click', () => {
+        alert("Profile feature coming soon!");
+        menu.remove();
+      });
+
+      document.getElementById('supportItem').addEventListener('click', () => {
+        switchView('about');
+        menu.remove();
+      });
+
+      document.getElementById('settingsItem').addEventListener('click', () => {
+        alert("Settings feature coming soon!");
+        menu.remove();
+      });
 
       setTimeout(() => {
         document.addEventListener('click', function close(e) {

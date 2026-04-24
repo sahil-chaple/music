@@ -108,6 +108,29 @@
     background: rgba(255,255,255,0.1);
     color: var(--text-primary);
   }
+
+  .remove-track-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 16px;
+    opacity: 0;
+    transition: var(--transition);
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .track-item:hover .remove-track-btn {
+    opacity: 1;
+  }
+  
+  .remove-track-btn:hover {
+    color: #ff4444 !important;
+    transform: scale(1.2);
+  }
   
   .track-name {
     color: var(--text-primary);
@@ -147,36 +170,45 @@
 }
 
 body {
-  background: #000;
-  color: #fff;
+  background: var(--bg-base);
+  color: var(--text-primary);
   height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
 }
 
 /* ---------- DARK / LIGHT THEME (default dark) ---------- */
+body.light {
+  background: #f5f5f7;
+  color: #111111;
+  --bg-base: #f5f5f7;
+  --bg-elevated: #ffffff;
+  --bg-highlight: #eaeaea;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --card-bg: #ffffff;
+  --accent: #1db954;
+  --border-light: rgba(0,0,0,0.08);
+}
+
 :root {
   --bg-base: #121212;
   --bg-elevated: #1e1e1e;
   --bg-highlight: #282828;
-  --text-primary: #fff;
+  --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --accent: #1ed760;
   --sidebar-width: 260px;
   --player-height: 90px;
   --card-bg: #181818;
   --transition: all 0.2s ease;
-}
-
-body.light {
-  --bg-base: #f5f5f7;
-  --bg-elevated: #ffffff;
-  --bg-highlight: #eaeaea;
-  --text-primary: #111;
-  --text-secondary: #555;
-  --card-bg: #ffffff;
-  --accent: #1db954;
+  --border-light: rgba(255,255,255,0.08);
 }
 
 /* ---------- LAYOUT ---------- */
@@ -856,13 +888,16 @@ body.light .player-bar {
     flex-direction: column;
     padding: 12px 16px;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
   }
   
   .now-playing {
     width: 100%;
     min-width: unset;
     gap: 12px;
+    justify-content: center;
   }
 
   .now-playing img {
@@ -874,9 +909,9 @@ body.light .player-bar {
     width: 100%;
     flex: none;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    gap: 0;
+    gap: 20px;
   }
 
   .control-buttons {
@@ -1546,7 +1581,8 @@ body.light .about-section-header p,
 body.light .card-3d-inner p,
 body.light .support-card p,
 body.light .quick-links-bar span,
-body.light .global-office p {
+body.light .global-office p,
+body.light .hero-intro-text.highlight {
     color: #4a4a4a;
 }
 
@@ -1563,6 +1599,68 @@ body.light .card-3d-inner {
     background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.5));
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+body.light .info-modal {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+body.light .info-modal-header,
+body.light .modal-footer {
+    border-color: rgba(0,0,0,0.08);
+}
+
+body.light .modal-input,
+body.light .modal-textarea {
+    background: #f0f0f0;
+    border-color: rgba(0,0,0,0.1);
+    color: #111;
+}
+
+body.light .modal-input:focus,
+body.light .modal-textarea:focus {
+    background: #ffffff;
+    border-color: var(--accent);
+}
+
+body.light .playlist-preview-card {
+    background: rgba(0,0,0,0.03);
+    border-color: rgba(0,0,0,0.08);
+}
+
+body.light .playlist-modal-item {
+    background: #f0f0f0 !important;
+}
+
+body.light .playlist-modal-item:hover {
+    background: #e5e5e5 !important;
+}
+
+body.light .user-dropdown {
+    background: #ffffff;
+    border-color: rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+body.light .dropdown-item:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+body.light .dropdown-divider {
+    background: rgba(0,0,0,0.08);
+}
+
+body.light .now-playing img {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+body.light .logo-3d-text {
+    -webkit-text-stroke: 1px rgba(0,0,0,0.1);
+}
+
+body.light .logo-3d-subtitle {
+    color: #555;
 }
 
 /* ---------- INFO MODAL ---------- */
