@@ -194,9 +194,21 @@ export const songs = [
     isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777009373/thumb_69b26b133f98c_lghxer.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777009360/AARI_AARI_-_SouthMelody_xzmwrf.mp3"
+  },
+  {
+    id: 16,
+    title: "Bairan",
+    artist: "Banjaare",
+    albumId: 1,
+    isTrending: true,
+    isPopular: true,
+    isNewRelease: true,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777010460/Bairan-Unknown-2026-20260223182954-500x500_nuhj1r.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777010468/Bairan_-_Bairan_128_kbps_wcadye.mp3"
   }
-
 ];
+
+
 
 export const albums = [
   {
@@ -219,5 +231,11 @@ export const albums = [
     artist: "Pritam, Benny Dayal, Shefali Alvares",
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
     description: "The classic Bollywood energetic soundtrack composed by the legends Pritam, Benny Dayal, Shefali Alvares."
+  },
+  {
+    id: 4,
+    title: "Bairan",
+    artist: "Banjaare",
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777010460/Bairan-Unknown-2026-20260223182954-500x500_nuhj1r.jpg",
   }
 ];

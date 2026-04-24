@@ -1,0 +1,14 @@
+{
+  "name": "streamwave",
+  "version": "1.0.0",
+  "description": "3D Music Streaming Platform",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx live-server",
+    "sync": "node sync-songs.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.0.0",
+    "dotenv": "^16.0.0"
+  }
+}
