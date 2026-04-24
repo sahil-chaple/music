@@ -7,6 +7,17 @@
  *
  * NOTE: Durations are loaded dynamically from audio metadata at runtime.
  * Do NOT hardcode a duration field — it will be ignored.
+ *   // {
+  //   id: ,
+  //   title: "",
+  //   artist: "",
+  //   albumId: ,
+  //   isTrending: ,
+  //   isPopular: ,
+  //   isNewRelease: ,
+  //   cover: "",
+  //   file: ""
+  // }
  */
 export const songs = [
   // --- Album 1: Dhurandhar (1983) ---
@@ -17,8 +28,8 @@ export const songs = [
     albumId: 1,
     language: "Hindi",
     isTrending: true,
-    isPopular: false,
-    isNewRelease: false,
+    isPopular: true,
+    isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687172/Dhurandhar-title-track_wolv0w.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597534/Dhurandhar_-_Title_Track_-_Dhurandhar_320_kbps_wiemwg.mp3"
   },
@@ -28,9 +39,9 @@ export const songs = [
     artist: "Asha Bhosle",
     albumId: 1,
     language: "Punjabi",
-    isTrending: false,
+    isTrending: true,
     isPopular: true,
-    isNewRelease: false,
+    isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687171/Lutt-Le-Gaya_qwihoh.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597562/Lutt_Le_Gaya_ritd1l.mp3"
   },
@@ -41,7 +52,7 @@ export const songs = [
     albumId: 1,
     language: "Punjabi",
     isTrending: true,
-    isPopular: false,
+    isPopular: true,
     isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687173/Naal-Nachna_mkbvt4.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597553/Naal_Nachna_-_Dhurandhar_320_kbps_llqz2v.mp3"
@@ -52,9 +63,9 @@ export const songs = [
     artist: "Asha Bhosle, Usha Uthup",
     albumId: 1,
     language: "Hindi",
-    isTrending: false,
+    isTrending: true,
     isPopular: true,
-    isNewRelease: false,
+    isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687172/ramba-ho_chmljv.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597559/Ramba_Ho_-_Dhurandhar_320_kbps_gvmnol.mp3"
   },
@@ -66,7 +77,7 @@ export const songs = [
     language: "English",
     isTrending: true,
     isPopular: true,
-    isNewRelease: false,
+    isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687171/run-down-the-city_cui2hi.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597552/Run_Down_The_City_-_Monica_-_Dhurandhar_320_kbps_din1n7.mp3"
   },
@@ -76,9 +87,9 @@ export const songs = [
     artist: "Asha Bhosle",
     albumId: 1,
     language: "Hindi",
-    isTrending: false,
-    isPopular: false,
-    isNewRelease: false,
+    isTrending: true,
+    isPopular: true,
+    isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687171/shararat_tbsblq.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776597557/Shararat_-_Dhurandhar_320_kbps_y7i3hl.mp3"
   },
@@ -95,7 +106,96 @@ export const songs = [
     isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776914019/kidyhibhvp2lwsvgx6ps.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776913961/Majboor_bkumhz.mp3"
+  },
+  {
+    id: 8,
+    title: "Badtameez Dil ",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776956471/Badtameez_Dil_Yeh_Jawaani_Hai_Deewani_128_Kbps_mjz3nd.mp3"
+  },
+  {
+    id: 9,
+    title: "Balam Pichkari",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957836/Balam_Pichkari_Yeh_Jawaani_Hai_Deewani_128_Kbps_dy6kfm.mp3"
+  },
+  {
+    id: 10,
+    title: "Illahi",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957837/Ilahi_Yeh_Jawaani_Hai_Deewani_128_Kbps_lyef7t.mp3"
+  },
+  {
+    id: 11,
+    title: "Kabira",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957834/Kabira_Yeh_Jawaani_Hai_Deewani_128_Kbps_qhgwax.mp3"
+  },
+  {
+    id: 12,
+    title: "Dilliwali Girlfriend",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957826/Dilliwaali_Girlfriend_Yeh_Jawaani_Hai_Deewani_128_Kbps_wzhvaq.mp3"
+  },
+  {
+    id: 13,
+    title: "Subhanallah",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957822/Subhanallah_Yeh_Jawaani_Hai_Deewani_128_Kbps_xy0fqi.mp3"
+  },
+  {
+    id: 14,
+    title: "Ghagra",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    albumId: 3,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1776957834/Ghagra_Yeh_Jawaani_Hai_Deewani_128_Kbps_zt6xmn.mp3"
+  },
+  {
+    id: 15,
+    title: "Aari Aari",
+    artist: "S. Janaki, R. D. Burman",
+    albumId: 1,
+    isTrending: true,
+    isPopular: true,
+    isNewRelease: true,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777009373/thumb_69b26b133f98c_lghxer.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777009360/AARI_AARI_-_SouthMelody_xzmwrf.mp3"
   }
+
 ];
 
 export const albums = [
@@ -112,5 +212,12 @@ export const albums = [
     artist: "Zoha Waseem, Sheheryar Rehan",
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776914019/kidyhibhvp2lwsvgx6ps.jpg",
     description: "A soulful modern track by Zoha Waseem and Sheheryar Rehan."
+  },
+  {
+    id: 3,
+    title: "Yeh Jawaani Hai Deewani",
+    artist: "Pritam, Benny Dayal, Shefali Alvares",
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776957571/jl5jbm7p7emmkhvnyfbm.jpg",
+    description: "The classic Bollywood energetic soundtrack composed by the legends Pritam, Benny Dayal, Shefali Alvares."
   }
 ];

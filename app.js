@@ -1,7 +1,7 @@
 import { auth, onAuthStateChanged, signOut } from './firebase-config.js';
 import { songs, albums } from './songs-data.js';
 
-(function() {
+(function () {
   "use strict";
 
   // --- DOM ELEMENTS ---
@@ -19,7 +19,7 @@ import { songs, albums } from './songs-data.js';
   const playerArtist = document.getElementById('playerArtist');
   const volumeSlider = document.getElementById('volumeSlider');
   const playerLikeBtn = document.getElementById('playerLikeBtn');
-  
+
   // Layout
   const userAvatar = document.getElementById('userAvatar');
   const themeToggle = document.getElementById('themeToggle');
@@ -27,28 +27,33 @@ import { songs, albums } from './songs-data.js';
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebarOverlay');
   const searchInput = document.getElementById('searchInput');
-  
+
   // Views
   const homeNavItem = document.getElementById('homeNavItem');
   const libraryNavItem = document.getElementById('libraryNavItem');
   const aboutNavItem = document.getElementById('aboutNavItem');
   const logoBtn = document.getElementById('logoBtn');
-  
+
   // View Specifics
   const homeView = document.getElementById('homeView');
   const libraryView = document.getElementById('libraryView');
   const aboutView = document.getElementById('aboutView');
-  
+
   // View Specifics
   const songsContainer = document.getElementById('songsContainer');
   const albumGrid = document.getElementById('albumGrid');
   const tracklistView = document.getElementById('tracklistView');
   const trackList = document.getElementById('trackList');
   const backBtn = document.getElementById('backBtn');
-  const libraryTitle = document.getElementById('libraryTitle');
+  const libraryDashboard = document.getElementById('libraryDashboard');
   const detailCover = document.getElementById('detailCover');
   const detailTitle = document.getElementById('detailTitle');
   const detailArtist = document.getElementById('detailArtist');
+  const addToPlaylistBtn = document.getElementById('addToPlaylistBtn');
+  const createPlaylistBtn = document.getElementById('createPlaylistBtn');
+  const customPlaylistsContainer = document.getElementById('customPlaylistsContainer');
+  const sidebarLikedSongs = document.getElementById('sidebarLikedSongs');
+  const sidebarTrending = document.getElementById('sidebarTrending');
 
   // --- STATE ---
   let currentSongIndex = 0;
@@ -60,12 +65,13 @@ import { songs, albums } from './songs-data.js';
   let isShuffled = true; // Shuffle ON by default
   let shuffleQueue = []; // Pre-built queue of song indices
   let shuffleQueuePos = 0; // Current position in the queue
-  
+  let userPlaylists = []; // Will be loaded from Firestore
+
   const SILENT_AUDIO = "data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoAAACAgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/fw==";
 
   // --- AUTHENTICATION ---
-  function checkAuth() {
-    onAuthStateChanged(auth, (user) => {
+  async function checkAuth() {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = 'login.html';
       } else {
@@ -77,6 +83,23 @@ import { songs, albums } from './songs-data.js';
           userAvatar.textContent = userData.displayName?.charAt(0).toUpperCase() || 'U';
           userAvatar.title = userData.displayName;
         }
+
+        // --- FETCH USER PLAYLISTS FROM FIRESTORE ---
+        try {
+          const { doc, getDoc, db } = await import('./firebase-config.js');
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const data = userSnap.data();
+            userPlaylists = data.playlists || [];
+            renderSidebarPlaylists();
+          }
+        } catch (err) {
+          console.error("Error fetching playlists:", err);
+          // Fallback to local storage if firestore fails
+          userPlaylists = JSON.parse(localStorage.getItem('userPlaylists')) || [];
+          renderSidebarPlaylists();
+        }
       }
     });
   }
@@ -85,7 +108,7 @@ import { songs, albums } from './songs-data.js';
   function switchView(viewName) {
     currentActiveView = viewName;
     resetTheme(); // 🎨 Always reset theme when navigating between views
-    
+
     if (viewName === 'home') {
       homeView.style.display = 'block';
       libraryView.style.display = 'none';
@@ -110,10 +133,17 @@ import { songs, albums } from './songs-data.js';
       libraryNavItem.classList.remove('active');
       aboutNavItem.classList.add('active');
     }
-    
-    // Reset library inner view if switching to library
-    if (viewName === 'library') goBackToLibrary();
-    
+
+    // Reset library inner view if switching to library (e.g. from Sidebar)
+    if (viewName === 'library') {
+      backBtn.innerHTML = ''; // Clear stale back button content
+      resetLibraryView();
+    }
+
+    // Scroll to top of main content
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.scrollTop = 0;
+
     // Close sidebar on mobile after nav
     if (window.innerWidth <= 768) {
       sidebar.classList.remove('open');
@@ -126,15 +156,15 @@ import { songs, albums } from './songs-data.js';
     const q = query.toLowerCase().trim();
     const homeDashboard = document.getElementById('homeDashboard');
     const searchResults = document.getElementById('searchResults');
-    
+
     // If searching, always switch to home view to show results
     if (q.length > 0) {
       if (currentActiveView !== 'home') switchView('home');
       homeDashboard.style.display = 'none';
       searchResults.style.display = 'block';
-      
-      filteredSongs = songs.filter(song => 
-        song.title.toLowerCase().includes(q) || 
+
+      filteredSongs = songs.filter(song =>
+        song.title.toLowerCase().includes(q) ||
         song.artist.toLowerCase().includes(q)
       );
       renderCards(filteredSongs);
@@ -148,7 +178,7 @@ import { songs, albums } from './songs-data.js';
   function renderCards(songsToRender) {
     const songsContainer = document.getElementById('songsContainer');
     if (!songsContainer) return;
-    
+
     if (songsToRender.length === 0) {
       songsContainer.innerHTML = '<div style="padding: 20px; color: var(--text-secondary);">No songs found matching your search.</div>';
       return;
@@ -170,7 +200,7 @@ import { songs, albums } from './songs-data.js';
       // Click logic
       card.addEventListener('click', () => {
         const songId = parseInt(card.dataset.songId);
-        if(isNaN(songId)) return; // prevent album card error
+        if (isNaN(songId)) return; // prevent album card error
         const index = songs.findIndex(s => s.id === songId);
         loadSong(index);
         if (!isPlaying) playPause();
@@ -184,15 +214,15 @@ import { songs, albums } from './songs-data.js';
         const y = e.clientY - rect.top;
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        const rotateX = ((y - centerY) / centerY) * -15; 
+        const rotateX = ((y - centerY) / centerY) * -15;
         const rotateY = ((x - centerX) / centerX) * 15;
         card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
       });
-      
+
       card.addEventListener('mouseleave', () => {
         card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
       });
-      
+
       // Scroll animation classes
       card.classList.add('scroll-reveal');
       if (globalObserver) {
@@ -202,6 +232,7 @@ import { songs, albums } from './songs-data.js';
   }
 
   function renderHomeDashboard() {
+    console.log('🏠 Rendering Home Dashboard...');
     const dashboard = document.getElementById('homeDashboard');
     if (!dashboard) return;
     
@@ -209,27 +240,40 @@ import { songs, albums } from './songs-data.js';
 
     // 1. Trending Songs
     const trending = songs.filter(s => s.isTrending);
-    if (trending.length > 0) html += buildShelfHTML('Trending Now', trending);
+    if (trending.length > 0) html += buildShelfHTML('Trending Now', trending, 'trending');
 
     // 2. New Releases
     const newReleases = songs.filter(s => s.isNewRelease);
-    if (newReleases.length > 0) html += buildShelfHTML('New Releases', newReleases);
+    if (newReleases.length > 0) html += buildShelfHTML('New Releases', newReleases, 'new_releases');
 
-    // 3. Popular Artists/Songs
+    // 3. Popular Hits
     const popular = songs.filter(s => s.isPopular);
-    if (popular.length > 0) html += buildShelfHTML('Popular Hits', popular);
+    if (popular.length > 0) html += buildShelfHTML('Popular Hits', popular, 'popular');
 
-
-    // 5. Recently Played (Fallback if no tags)
-    if (html === '' || recentlyPlayed.length > 0) {
+    // 4. Recently Played
+    if (recentlyPlayed.length > 0) {
       const recent = recentlyPlayed.map(id => songs.find(s => s.id === id)).filter(Boolean);
-      if (recent.length > 0) html = buildShelfHTML('Recently Played', recent) + html;
+      if (recent.length > 0) html = buildShelfHTML('Recently Played', recent, 'recent') + html;
     }
 
     dashboard.innerHTML = html;
     attachSongClickListeners(dashboard);
+    
+    // Add listeners for shelf headers
+    dashboard.querySelectorAll('.shelf-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const category = header.dataset.category;
+        const title = header.textContent.replace('Show all', '').trim();
+        let categorySongs = [];
+        if (category === 'trending') categorySongs = songs.filter(s => s.isTrending);
+        else if (category === 'new_releases') categorySongs = songs.filter(s => s.isNewRelease);
+        else if (category === 'popular') categorySongs = songs.filter(s => s.isPopular);
+        else if (category === 'recent') categorySongs = recentlyPlayed.map(id => songs.find(s => s.id === id)).filter(Boolean);
+        
+        showCategoryTracks(title, categorySongs);
+      });
+    });
 
-    // Observe newly injected shelves for 3D scroll animations
     if (globalObserver) {
       dashboard.querySelectorAll('.home-shelf.scroll-reveal').forEach(shelf => {
         globalObserver.observe(shelf);
@@ -237,7 +281,7 @@ import { songs, albums } from './songs-data.js';
     }
   }
 
-  function buildShelfHTML(title, shelfSongs) {
+  function buildShelfHTML(title, shelfSongs, categoryKey) {
     const cardsHtml = shelfSongs.map(song => `
       <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
         <img class="card-cover" src="${song.cover}" alt="${song.title}">
@@ -248,7 +292,7 @@ import { songs, albums } from './songs-data.js';
 
     return `
       <div class="home-shelf scroll-reveal">
-        <h3 class="shelf-header">${title}</h3>
+        <h3 class="shelf-header" data-category="${categoryKey}">${title}</h3>
         <div class="shelf-row">
           ${cardsHtml}
         </div>
@@ -288,9 +332,11 @@ import { songs, albums } from './songs-data.js';
   function buildCardHTML(song) {
     return `
       <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-        <img class="card-cover" src="${song.cover}" alt="${song.title}">
-        <div class="card-title">${song.title}</div>
-        <div class="card-artist">${song.artist}</div>
+        <div class="card-3d-wrapper">
+          <img class="card-cover" src="${song.cover}" alt="${song.title}">
+          <div class="card-title">${song.title}</div>
+          <div class="card-artist">${song.artist}</div>
+        </div>
       </div>
     `;
   }
@@ -298,21 +344,23 @@ import { songs, albums } from './songs-data.js';
   function renderAlbums() {
     if (!albumGrid) return;
     albumGrid.innerHTML = albums.map(album => `
-      <div class="song-card scroll-reveal" data-album-id="${album.id}" style="transform-style: preserve-3d;">
-        <img class="card-cover" src="${album.cover}" alt="${album.title}">
-        <div class="card-title">${album.title}</div>
-        <div class="card-artist">${album.artist}</div>
+      <div class="song-card scroll-reveal" data-album-id="${album.id}">
+        <div class="card-3d-wrapper">
+          <img class="card-cover" src="${album.cover}" alt="${album.title}">
+          <div class="card-title">${album.title}</div>
+          <div class="card-artist">${album.artist}</div>
+        </div>
       </div>
     `).join('');
 
-    document.querySelectorAll('[data-album-id]').forEach(card => {
+    albumGrid.querySelectorAll('[data-album-id]').forEach(card => {
       // Click logic
       card.addEventListener('click', () => {
         const albumId = parseInt(card.dataset.albumId);
         showAlbumTracks(albumId);
       });
       
-      // 3D Hover Tracking logic for Albums
+      // 3D effect
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -449,10 +497,10 @@ import { songs, albums } from './songs-data.js';
     const album = albums.find(a => a.id === albumId);
     const albumSongs = songs.filter(s => s.albumId === albumId);
 
-    albumGrid.style.display = 'none';
-    libraryTitle.style.display = 'none';
+    libraryDashboard.style.display = 'none';
     tracklistView.style.display = 'block';
     backBtn.style.display = 'flex';
+    backBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Back to Library';
 
     detailCover.src = album.cover;
     detailTitle.textContent = album.title;
@@ -460,6 +508,10 @@ import { songs, albums } from './songs-data.js';
 
     // 🎨 Apply dynamic color theme based on album cover
     extractColorFromImage(album.cover).then(color => applyDynamicTheme(color));
+
+    // Scroll main to top
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.scrollTop = 0;
 
     trackList.innerHTML = albumSongs.map((song, index) => `
       <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
@@ -495,12 +547,336 @@ import { songs, albums } from './songs-data.js';
     });
   }
 
-  function goBackToLibrary() {
-    albumGrid.style.display = 'grid';
-    libraryTitle.style.display = 'block';
+  function resetLibraryView() {
+    libraryDashboard.style.display = 'block';
     tracklistView.style.display = 'none';
     backBtn.style.display = 'none';
-    resetTheme(); // 🎨 Reset to default theme when leaving album view
+    resetTheme();
+  }
+
+  function showCategoryTracks(title, categorySongs, playlistId = null) {
+    // Navigate to library view container
+    currentActiveView = 'library';
+    homeView.style.display = 'none';
+    libraryView.style.display = 'block';
+    aboutView.style.display = 'none';
+    homeNavItem.classList.remove('active');
+    libraryNavItem.classList.add('active');
+    
+    libraryDashboard.style.display = 'none';
+    tracklistView.style.display = 'block';
+    backBtn.style.display = 'flex';
+    backBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Back to Home';
+    
+    detailCover.src = categorySongs[0]?.cover || 'https://placehold.co/400x400/333/1ed760?text=Music';
+    detailTitle.textContent = title;
+    
+    // Add "Add Songs" button if it's a user playlist
+    if (playlistId) {
+      detailArtist.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+          <span>${categorySongs.length} Songs</span>
+          <button id="addSongsToPlBtn" class="modal-btn modal-btn-primary" style="padding: 6px 16px; font-size: 12px;">
+            <i class="fas fa-plus"></i> Add Songs
+          </button>
+        </div>
+      `;
+      document.getElementById('addSongsToPlBtn').onclick = () => openAddSongsToPlaylistModal(playlistId);
+    } else {
+      detailArtist.textContent = `${categorySongs.length} Songs`;
+    }
+
+    // Scroll main to top
+    const mainEl = document.querySelector('.main');
+    if (mainEl) mainEl.scrollTop = 0;
+
+    trackList.innerHTML = categorySongs.map((song, index) => `
+      <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
+        <div class="track-number">${index + 1}</div>
+        <div class="track-details">
+          <div class="track-name">${song.title}</div>
+          <div class="track-artist">${song.artist}</div>
+        </div>
+        <div class="track-duration" id="dur-${song.id}">—</div>
+      </div>
+    `).join('');
+
+    // Dynamically load real durations
+    categorySongs.forEach(song => {
+      if (!song.file) return;
+      const tmpAudio = new Audio();
+      tmpAudio.preload = 'metadata';
+      tmpAudio.addEventListener('loadedmetadata', () => {
+        const el = document.getElementById(`dur-${song.id}`);
+        if (el) el.textContent = formatTime(tmpAudio.duration);
+        tmpAudio.src = '';
+      }, { once: true });
+      tmpAudio.src = song.file;
+    });
+
+    document.querySelectorAll('.track-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const songId = parseInt(item.dataset.songId);
+        const index = songs.findIndex(s => s.id === songId);
+        loadSong(index);
+        playPause();
+      });
+    });
+  }
+
+  function openAddSongsToPlaylistModal(plId) {
+    const playlist = userPlaylists.find(p => p.id === plId);
+    if (!playlist) return;
+
+    infoModalTitle.textContent = `Add Songs to "${playlist.name}"`;
+    
+    // Filter out songs already in the playlist
+    let availableSongs = songs.filter(s => !playlist.songIds.includes(s.id));
+
+    if (availableSongs.length === 0) {
+      infoModalContent.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">All available songs are already in this playlist!</div>`;
+    } else {
+      // Build Modal Layout with Search Bar
+      infoModalContent.innerHTML = `
+        <div style="padding: 15px;">
+          <div class="search-wrapper" style="margin-bottom: 20px; max-width: 100%; background: var(--bg-highlight);">
+            <i class="fas fa-search"></i>
+            <input type="text" id="plSongSearch" placeholder="Search for a song to add..." style="background: transparent; border: none; color: white; width: 100%; outline: none;">
+          </div>
+          <div id="modalSongList"></div>
+        </div>
+      `;
+
+      const searchInput = document.getElementById('plSongSearch');
+      const songListContainer = document.getElementById('modalSongList');
+
+      const renderModalSongs = (filtered) => {
+        if (filtered.length === 0) {
+          songListContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-secondary);">No matches found.</div>`;
+          return;
+        }
+
+        songListContainer.innerHTML = filtered.map(song => `
+          <div class="playlist-modal-item add-song-item" data-song-id="${song.id}" style="padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; background: var(--bg-highlight);">
+            <img src="${song.cover}" style="width: 40px; height: 40px; border-radius: 4px;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 14px;">${song.title}</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">${song.artist}</div>
+            </div>
+            <i class="fas fa-plus" style="color: var(--accent);"></i>
+          </div>
+        `).join('');
+
+        songListContainer.querySelectorAll('.add-song-item').forEach(item => {
+          item.onclick = () => {
+            const songId = parseInt(item.dataset.songId);
+            playlist.songIds.push(songId);
+            savePlaylistsToStorage();
+            
+            item.style.opacity = '0.5';
+            item.querySelector('i').className = 'fas fa-check';
+            item.style.pointerEvents = 'none';
+
+            const updatedSongs = playlist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+            showCategoryTracks(playlist.name, updatedSongs, plId);
+            
+            // Re-filter after adding to avoid showing the same song twice
+            availableSongs = availableSongs.filter(s => s.id !== songId);
+          };
+        });
+      };
+
+      // Initial render
+      renderModalSongs(availableSongs);
+
+      // Search functionality
+      searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        const results = availableSongs.filter(s => 
+          s.title.toLowerCase().includes(q) || 
+          s.artist.toLowerCase().includes(q)
+        );
+        renderModalSongs(results);
+      });
+    }
+
+    infoModalOverlay.classList.add('active');
+  }
+
+  function goBackToLibrary() {
+    if (backBtn.textContent.includes('Home')) {
+      switchView('home');
+    } else {
+      resetLibraryView();
+    }
+  }
+
+
+  // --- PLAYLIST LOGIC ---
+  function renderSidebarPlaylists() {
+    customPlaylistsContainer.innerHTML = userPlaylists.map(pl => `
+      <div class="playlist-item" data-playlist-id="${pl.id}">
+        <i class="fas fa-list-ul" style="margin-right: 8px;"></i>${pl.name}
+      </div>
+    `).join('');
+
+    customPlaylistsContainer.querySelectorAll('.playlist-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const plId = item.dataset.playlistId;
+        const playlist = userPlaylists.find(p => p.id === plId);
+        if (playlist) {
+          const playlistSongs = playlist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+          showCategoryTracks(playlist.name, playlistSongs, plId);
+        }
+      });
+    });
+  }
+
+  function createNewPlaylist() {
+    infoModalTitle.textContent = "Create New Playlist";
+
+    infoModalContent.innerHTML = `
+      <div class="modal-body">
+        <div class="playlist-preview-card">
+          <div class="preview-cover"><i class="fas fa-music"></i></div>
+          <div class="preview-info">
+            <span class="preview-type">Playlist</span>
+            <div class="preview-name" id="prevName">My Playlist</div>
+            <div class="preview-desc" id="prevDesc">Give your playlist a description.</div>
+          </div>
+        </div>
+
+        <div class="modal-form-group">
+          <label>Name</label>
+          <input type="text" id="plInputName" class="modal-input" placeholder="My Playlist" maxlength="30" autocomplete="off">
+        </div>
+        
+        <div class="modal-form-group">
+          <label>Description</label>
+          <textarea id="plInputDesc" class="modal-textarea" placeholder="Add an optional description" maxlength="100"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" id="modalCancelBtn">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="modalSaveBtn">Create Playlist</button>
+      </div>
+    `;
+
+    infoModalOverlay.classList.add('active');
+
+    const nameInput = document.getElementById('plInputName');
+    const descInput = document.getElementById('plInputDesc');
+    const prevName = document.getElementById('prevName');
+    const prevDesc = document.getElementById('prevDesc');
+
+    // Focus name input immediately
+    setTimeout(() => nameInput.focus(), 100);
+
+    nameInput.addEventListener('input', (e) => {
+      prevName.textContent = e.target.value || "My Playlist";
+    });
+
+    descInput.addEventListener('input', (e) => {
+      prevDesc.textContent = e.target.value || "Give your playlist a description.";
+    });
+
+    document.getElementById('modalCancelBtn').onclick = () => {
+      infoModalOverlay.classList.remove('active');
+    };
+
+    document.getElementById('modalSaveBtn').onclick = () => {
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.style.borderColor = "#ff4444";
+        setTimeout(() => nameInput.style.borderColor = "", 1500);
+        nameInput.focus();
+        return;
+      }
+
+      const newPl = {
+        id: 'pl_' + Date.now(),
+        name: name,
+        description: descInput.value.trim(),
+        songIds: []
+      };
+
+      userPlaylists.push(newPl);
+      savePlaylistsToStorage();
+      renderSidebarPlaylists();
+      infoModalOverlay.classList.remove('active');
+    };
+  }
+
+  async function savePlaylistsToStorage() {
+    // 1. Save to local storage for immediate speed
+    localStorage.setItem('userPlaylists', JSON.stringify(userPlaylists));
+
+    // 2. Sync with Firestore for persistence
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const { doc, setDoc, db } = await import('./firebase-config.js');
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, { playlists: userPlaylists }, { merge: true });
+      } catch (err) {
+        console.error("Firestore sync failed:", err);
+      }
+    }
+  }
+
+  function openAddToPlaylistModal() {
+    const currentSong = songs[currentSongIndex];
+    if (!currentSong) return;
+
+    infoModalTitle.textContent = "Add to Playlist";
+
+    if (userPlaylists.length === 0) {
+      infoModalContent.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
+          <p>You haven't created any playlists yet.</p>
+          <button id="modalCreateBtn" style="margin-top: 15px; padding: 10px 20px; border-radius: 20px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer;">Create Playlist</button>
+        </div>
+      `;
+      infoModalOverlay.classList.add('active');
+      document.getElementById('modalCreateBtn').onclick = () => {
+        infoModalOverlay.classList.remove('active');
+        createNewPlaylist();
+      };
+      return;
+    }
+
+    const plListHtml = userPlaylists.map(pl => `
+      <div class="playlist-modal-item" data-pl-id="${pl.id}" style="padding: 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; background: var(--bg-highlight);">
+        <i class="fas fa-plus-circle" style="color: var(--accent);"></i>
+        <span>${pl.name}</span>
+      </div>
+    `).join('');
+
+    infoModalContent.innerHTML = `
+      <div style="padding: 10px;">
+        <p style="margin-bottom: 15px; color: var(--text-secondary);">Select a playlist to add "<strong>${currentSong.title}</strong>"</p>
+        ${plListHtml}
+      </div>
+    `;
+
+    infoModalOverlay.classList.add('active');
+
+    infoModalContent.querySelectorAll('.playlist-modal-item').forEach(item => {
+      item.onclick = () => {
+        const plId = item.dataset.plId;
+        const playlist = userPlaylists.find(p => p.id === plId);
+        if (playlist) {
+          if (!playlist.songIds.includes(currentSong.id)) {
+            playlist.songIds.push(currentSong.id);
+            savePlaylistsToStorage();
+            alert(`Added "${currentSong.title}" to "${playlist.name}"`);
+          } else {
+            alert(`"${currentSong.title}" is already in "${playlist.name}"`);
+          }
+          infoModalOverlay.classList.remove('active');
+        }
+      };
+    });
   }
 
   // --- PLAYER ENGINE ---
@@ -512,24 +888,25 @@ import { songs, albums } from './songs-data.js';
     playerCover.src = song.cover;
     playerTitle.textContent = song.title;
     playerArtist.textContent = song.artist;
-    
+
     currentSongIndex = index;
     localStorage.setItem('lastPlayedIndex', index);
     addToRecentlyPlayed(song.id);
-    
+
     audio.load();
     if (isPlaying) {
       audio.play().catch(e => console.log('Play prevented:', e));
     }
-    
+
     // Update active highlight in UI
     if (searchInput.value !== '') {
       renderCards(filteredSongs);
     }
     renderHomeDashboard();
-    
+
     // Update Like Button State
     playerLikeBtn.style.display = 'flex';
+    addToPlaylistBtn.style.display = 'flex';
     if (likedSongs.includes(song.id)) {
       playerLikeBtn.innerHTML = '<i class="fas fa-heart"></i>';
       playerLikeBtn.classList.add('liked');
@@ -537,7 +914,7 @@ import { songs, albums } from './songs-data.js';
       playerLikeBtn.innerHTML = '<i class="far fa-heart"></i>';
       playerLikeBtn.classList.remove('liked');
     }
-    
+
     if (currentActiveView === 'library' && tracklistView.style.display === 'block') {
       // Refresh tracklist highlight if open
       const activeAlbumId = albums.find(a => a.title === detailTitle.textContent)?.id;
@@ -670,7 +1047,7 @@ import { songs, albums } from './songs-data.js';
       threshold: 0.1,
       rootMargin: "0px 0px -50px 0px"
     });
-    
+
     // Observe existing shelves
     document.querySelectorAll('.scroll-reveal, .home-shelf').forEach(el => {
       el.classList.add('scroll-reveal');
@@ -684,12 +1061,12 @@ import { songs, albums } from './songs-data.js';
     setup3DScrollAnimations();
     renderHomeDashboard();
     renderAlbums();
-    
+
     // Like button listener
     if (playerLikeBtn) {
       playerLikeBtn.addEventListener('click', toggleLikeCurrentSong);
     }
-    
+
     // Load state
     const lastIdx = localStorage.getItem('lastPlayedIndex');
     if (lastIdx !== null) loadSong(parseInt(lastIdx));
@@ -704,7 +1081,7 @@ import { songs, albums } from './songs-data.js';
       shuffleBtn.title = isShuffled ? 'Shuffle: On' : 'Shuffle: Off';
       shuffleBtn.addEventListener('click', toggleShuffle);
     }
-    
+
     const vol = localStorage.getItem('playerVolume');
     if (vol !== null) {
       audio.volume = parseFloat(vol);
@@ -716,7 +1093,7 @@ import { songs, albums } from './songs-data.js';
     nextBtn.addEventListener('click', nextSong);
     prevBtn.addEventListener('click', prevSong);
     backBtn.addEventListener('click', goBackToLibrary);
-    
+
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         const percent = (audio.currentTime / audio.duration) * 100;
@@ -729,20 +1106,20 @@ import { songs, albums } from './songs-data.js';
     audio.addEventListener('error', (e) => {
       console.error("Audio error:", e);
       let errorMsg = "Unable to load song. ";
-      
+
       // Check for common cloud storage errors
       if (!navigator.onLine) {
         errorMsg += "Please check your internet connection.";
       } else {
         errorMsg += "The link might be broken or expired.";
       }
-      
+
       // Simple UI feedback
       playerTitle.textContent = "Error Loading Song";
       playerArtist.textContent = "Please try another track";
       isPlaying = false;
       updatePlayButton();
-      
+
       alert(errorMsg);
     });
 
@@ -764,12 +1141,12 @@ import { songs, albums } from './songs-data.js';
     });
 
     searchInput.addEventListener('input', (e) => handleSearch(e.target.value));
-    
+
     themeToggle.addEventListener('click', () => {
       document.body.classList.toggle('light');
       themeToggle.querySelector('i').className = document.body.classList.contains('light') ? 'fas fa-moon' : 'fas fa-sun';
     });
-    
+
     menuToggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
       sidebarOverlay.classList.toggle('active');
@@ -779,7 +1156,28 @@ import { songs, albums } from './songs-data.js';
       sidebar.classList.remove('open');
       sidebarOverlay.classList.remove('active');
     });
-    
+
+    // Playlist Listeners
+    sidebarLikedSongs.addEventListener('click', () => {
+      const liked = likedSongs.map(id => songs.find(s => s.id === id)).filter(Boolean);
+      showCategoryTracks('Liked Songs', liked);
+    });
+
+    sidebarTrending.addEventListener('click', () => {
+      const trending = songs.filter(s => s.isTrending);
+      showCategoryTracks('Trending Now', trending);
+    });
+
+    createPlaylistBtn.addEventListener('click', createPlaylistBtn.id === 'createPlaylistBtn' ? createNewPlaylist : () => { });
+    addToPlaylistBtn.addEventListener('click', openAddToPlaylistModal);
+
+    infoModalClose.addEventListener('click', () => infoModalOverlay.classList.remove('active'));
+    infoModalOverlay.addEventListener('click', (e) => {
+      if (e.target === infoModalOverlay) infoModalOverlay.classList.remove('active');
+    });
+
+    renderSidebarPlaylists();
+
     // SPA Nav
     homeNavItem.addEventListener('click', () => switchView('home'));
     libraryNavItem.addEventListener('click', () => switchView('library'));
@@ -793,7 +1191,7 @@ import { songs, albums } from './songs-data.js';
         existing.remove();
         return;
       }
-      
+
       const menu = document.createElement('div');
       menu.className = 'user-dropdown';
       menu.innerHTML = `
@@ -803,9 +1201,9 @@ import { songs, albums } from './songs-data.js';
         <div class="dropdown-item" id="logoutItem"><i class="fas fa-sign-out-alt"></i> Logout</div>
       `;
       document.body.appendChild(menu);
-      
+
       document.getElementById('logoutItem').addEventListener('click', handleLogout);
-      
+
       setTimeout(() => {
         document.addEventListener('click', function close(e) {
           if (!e.target.closest('.user-dropdown') && !e.target.closest('#userAvatar')) {
@@ -817,25 +1215,22 @@ import { songs, albums } from './songs-data.js';
     });
 
     // --- FOOTER LINKS MODAL LOGIC ---
-    const infoModalOverlay = document.getElementById('infoModalOverlay');
-    const infoModalClose = document.getElementById('infoModalClose');
-    const infoModalTitle = document.getElementById('infoModalTitle');
-    const infoModalContent = document.getElementById('infoModalContent');
-
     const closeInfoModal = () => {
-      infoModalOverlay.classList.remove('active');
+      if (infoModalOverlay) infoModalOverlay.classList.remove('active');
     };
 
-    infoModalClose.addEventListener('click', closeInfoModal);
-    infoModalOverlay.addEventListener('click', (e) => {
-      if (e.target === infoModalOverlay) closeInfoModal();
-    });
+    if (infoModalClose) infoModalClose.addEventListener('click', closeInfoModal);
+    if (infoModalOverlay) {
+      infoModalOverlay.addEventListener('click', (e) => {
+        if (e.target === infoModalOverlay) closeInfoModal();
+      });
+    }
 
     document.querySelectorAll('.app-footer a').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const topic = link.textContent.trim();
-        
+
         if (topic.toLowerCase() === 'about') {
           switchView('about');
           window.scrollTo(0, 0);
@@ -859,16 +1254,16 @@ import { songs, albums } from './songs-data.js';
         const rect = card.getBoundingClientRect();
         const x = e.clientX - rect.left; // x position within the element
         const y = e.clientY - rect.top;  // y position within the element
-        
+
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
-        
+
         const rotateX = ((y - centerY) / centerY) * -10; // Max rotation 10deg
         const rotateY = ((x - centerX) / centerX) * 10;
-        
+
         card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
       });
-      
+
       card.addEventListener('mouseleave', () => {
         card.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg)`;
       });
@@ -886,24 +1281,24 @@ import { songs, albums } from './songs-data.js';
 
         let isRecording = false;
 
-        recognition.onstart = function() {
+        recognition.onstart = function () {
           isRecording = true;
           micBtn.classList.add('recording');
           searchInput.placeholder = "Listening... (Speak now)";
         };
 
-        recognition.onresult = function(event) {
+        recognition.onresult = function (event) {
           let transcript = event.results[0][0].transcript;
           transcript = transcript.replace(/[.,!?]$/, '').trim();
           searchInput.value = transcript;
           handleSearch(transcript);
         };
 
-        recognition.onerror = function(event) {
+        recognition.onerror = function (event) {
           console.error("Speech recognition error:", event.error);
           micBtn.classList.remove('recording');
           isRecording = false;
-          
+
           if (event.error === 'not-allowed') {
             alert("Microphone access denied. If you are opening this file directly (file://), Chrome blocks the microphone. You must run it through a local server (like Live Server or localhost).");
           } else if (event.error === 'network') {
@@ -915,7 +1310,7 @@ import { songs, albums } from './songs-data.js';
           }
         };
 
-        recognition.onend = function() {
+        recognition.onend = function () {
           micBtn.classList.remove('recording');
           if (searchInput.placeholder === "Listening... (Speak now)") {
             searchInput.placeholder = "Search songs or artists...";
@@ -925,9 +1320,9 @@ import { songs, albums } from './songs-data.js';
 
         micBtn.addEventListener('click', (e) => {
           e.preventDefault(); // Stop any bubbling or default actions
-          
+
           if (window.location.protocol === 'file:') {
-             alert("Warning: Voice Search will not work if you opened this file directly from your folder (file://). You must use a local server (http://localhost) for Chrome to allow microphone access.");
+            alert("Warning: Voice Search will not work if you opened this file directly from your folder (file://). You must use a local server (http://localhost) for Chrome to allow microphone access.");
           }
 
           if (isRecording) {
