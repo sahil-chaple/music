@@ -15,7 +15,7 @@ function slugify(text) {
 
 async function syncSongs() {
   console.log("🔄 StreamWave Incremental Sync: Checking for new music...");
-  
+
   const filePath = './songs-data.js';
   let existingContent = '';
   let existingSongs = [];
@@ -24,7 +24,7 @@ async function syncSongs() {
   // 1. Read existing file and parse songs
   if (fs.existsSync(filePath)) {
     existingContent = fs.readFileSync(filePath, 'utf8');
-    
+
     // Extract existing songs array using regex
     const songMatch = existingContent.match(/export const songs = \[(.*?)\];/s);
     if (songMatch) {
@@ -35,7 +35,7 @@ async function syncSongs() {
         existingSongs = urlMatches.map(m => m.match(/"(.*?)"/)[1]);
       }
     }
-    
+
     // Preserve albums section
     const albumMatch = existingContent.match(/export const albums = \[(.*?)\];/s);
     if (albumMatch) {
@@ -47,7 +47,7 @@ async function syncSongs() {
     // 2. Fetch from Cloudinary
     const audioRes = await cloudinary.search.expression('resource_type:video').max_results(500).execute();
     const imageRes = await cloudinary.search.expression('resource_type:image').max_results(500).execute();
-    
+
     const audioFiles = audioRes.resources || [];
     const imageFiles = imageRes.resources || [];
 
@@ -60,7 +60,7 @@ async function syncSongs() {
     }
 
     console.log(`🆕 Found ${newFiles.length} new songs! Adding them now...`);
-    
+
     // Get highest existing ID
     const idMatches = existingContent.match(/id: (\d+)/g);
     let lastId = 0;
@@ -71,7 +71,7 @@ async function syncSongs() {
     const newSongsCode = newFiles.map((file, index) => {
       const fileName = file.public_id.split('/').pop();
       const songSlug = slugify(file.public_id);
-      
+
       let title = fileName.split('_')[0].split('-')[0].trim();
       if (title.length < 3) title = fileName.replace(/[_-]/g, ' ').replace(/\d+kbps/gi, '').trim();
 
@@ -83,11 +83,11 @@ async function syncSongs() {
       return `  {
     id: ${lastId + index + 1},
     title: "${title}",
-    artist: "New Artist",
-    albumId: 1,
-    isTrending: false,
-    isPopular: false,
-    isNewRelease: true,
+    artist: "",
+    albumId: 0,
+    isTrending: ,
+    isPopular: ,
+    isNewRelease: ,
     cover: "${matchingCover ? matchingCover.secure_url : "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687172/Dhurandhar-title-track_wolv0w.jpg"}",
     file: "${file.secure_url}"
   }`;
