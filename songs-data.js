@@ -199,7 +199,7 @@ export const songs = [
     id: 16,
     title: "Bairan",
     artist: "Banjaare",
-    albumId: 1,
+    albumId: 4,
     isTrending: true,
     isPopular: true,
     isNewRelease: true,
