@@ -313,19 +313,73 @@ import { songs, albums } from './songs-data.js';
       likedGrid.innerHTML = liked.map(song => buildCardHTML(song)).join('');
       likedShelfWrapper.style.display = 'flex';
       attachSongClickListeners(likedGrid);
+      // Add listener to header to open full list
+      likedShelfWrapper.querySelector('.shelf-header').onclick = () => showCategoryTracks('Liked Songs', liked);
     } else {
       likedShelfWrapper.style.display = 'none';
     }
 
-    // Recently Played
-    const recent = recentlyPlayed.map(id => songs.find(s => s.id === id)).filter(Boolean);
-    if (recent.length > 0) {
-      recentGrid.innerHTML = recent.map(song => buildCardHTML(song)).join('');
-      recentShelfWrapper.style.display = 'flex';
-      attachSongClickListeners(recentGrid);
-    } else {
-      recentShelfWrapper.style.display = 'none';
+    // Albums Header Click Listener
+    if (albumGrid) {
+      const albumHeader = albumGrid.previousElementSibling;
+      if (albumHeader && albumHeader.classList.contains('shelf-header')) {
+        albumHeader.onclick = () => showAllAlbumsView();
+      }
     }
+  }
+
+  function showAllAlbumsView() {
+    libraryDashboard.style.display = 'none';
+    tracklistView.style.display = 'block';
+    backBtn.style.display = 'flex';
+    backBtn.innerHTML = '<i class="fas fa-chevron-left"></i> Back to Library';
+    
+    // Header Info
+    detailCover.src = albums[0]?.cover || 'https://placehold.co/400x400/1db954/white?text=Albums';
+    detailTitle.textContent = 'Your Albums';
+    detailArtist.textContent = `${albums.length} Albums Collection`;
+    resetTheme(); // Clear any dynamic themes
+
+    // Render Albums in a full grid
+    trackList.innerHTML = `
+      <div class="cards-grid" style="padding: 20px 0; width: 100%;">
+        ${albums.map(album => `
+          <div class="song-card scroll-reveal" data-album-id="${album.id}">
+            <div class="card-3d-wrapper">
+              <img class="card-cover" src="${album.cover}" alt="${album.title}">
+              <div class="card-title">${album.title}</div>
+              <div class="card-artist">${album.artist}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    
+    // Attach click and hover listeners to cards
+    trackList.querySelectorAll('.song-card').forEach(card => {
+      card.onclick = () => {
+        const albumId = parseInt(card.dataset.albumId);
+        showAlbumTracks(albumId);
+      };
+
+      // Add 3D effect
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -15; 
+        const rotateY = ((x - centerX) / centerX) * 15;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+      });
+
+      if (globalObserver) globalObserver.observe(card);
+    });
   }
 
   function buildCardHTML(song) {
