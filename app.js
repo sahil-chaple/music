@@ -1674,6 +1674,16 @@ import { songs, albums } from './songs-data.js';
     aboutNavItem.addEventListener('click', () => switchView('about'));
     logoBtn.addEventListener('click', () => switchView('home'));
 
+    // About Page CTA Buttons
+    const aboutExploreBtn = document.getElementById('aboutExploreBtn');
+    if (aboutExploreBtn) aboutExploreBtn.addEventListener('click', () => switchView('home'));
+    
+    const aboutLibraryBtn = document.getElementById('aboutLibraryBtn');
+    if (aboutLibraryBtn) aboutLibraryBtn.addEventListener('click', () => switchView('library'));
+    
+    const aboutStartListeningBtn = document.getElementById('aboutStartListeningBtn');
+    if (aboutStartListeningBtn) aboutStartListeningBtn.addEventListener('click', () => switchView('home'));
+
     // User Avatar Click
     userAvatar.addEventListener('click', (e) => {
       e.stopPropagation(); // Prevent immediate closing

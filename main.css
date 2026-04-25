@@ -2231,3 +2231,308 @@ body.light .avatar-action-btn {
 body.light .avatar-action-btn:hover {
     background: rgba(0, 0, 0, 0.1);
 }
+
+/* ==========================================
+   STREAMWAVE ABOUT PAGE STYLES (PREMIUM)
+   ========================================== */
+   
+#aboutView {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+}
+
+.about-glass-container {
+  background: rgba(30, 215, 96, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-glass-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 50px rgba(30, 215, 96, 0.1);
+}
+
+/* --- Hero Section --- */
+.about-hero-section {
+  text-align: center;
+  padding: 80px 20px 60px;
+  position: relative;
+}
+
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(30, 215, 96, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.about-hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.about-hero-section h1 {
+  font-size: 5rem;
+  font-weight: 900;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -2px;
+}
+
+.hero-tagline {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  font-weight: 300;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.about-btn-primary, .about-btn-secondary {
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.about-btn-primary {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 8px 24px rgba(30, 215, 96, 0.3);
+}
+
+.about-btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 28px rgba(30, 215, 96, 0.5);
+  background: #1fdf64;
+}
+
+.about-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.about-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-primary);
+}
+
+/* --- Intro Section --- */
+.about-intro-section {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.about-intro-section h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.about-intro-section p {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* --- Features Section --- */
+.about-features-section {
+  margin-bottom: 80px;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.about-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.about-feature-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 30px;
+  transition: all 0.3s ease;
+}
+
+.about-feature-card:hover {
+  background: rgba(30, 215, 96, 0.05);
+  border-color: rgba(30, 215, 96, 0.2);
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.about-feature-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+}
+
+.about-feature-card p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* --- Why Choose Section --- */
+.about-why-section {
+  margin-bottom: 80px;
+}
+
+.why-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.why-list li {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.why-list li i {
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.why-list li strong {
+  color: var(--text-primary);
+}
+
+/* --- Vision Section --- */
+.about-vision-section {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.vision-text {
+  font-size: 1.4rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  max-width: 800px;
+  margin: 0 auto;
+  font-style: italic;
+}
+
+/* --- Developer Section --- */
+.about-dev-section {
+  margin-bottom: 80px;
+}
+
+.dev-card {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.dev-avatar {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #111, #333);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+
+.dev-info h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.dev-info p {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.dev-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.3s ease;
+}
+
+.dev-link:hover {
+  color: var(--accent);
+}
+
+/* --- Final CTA Section --- */
+.about-cta-section {
+  text-align: center;
+  padding: 60px 0;
+}
+
+.about-cta-section h2 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.about-cta-section p {
+  font-size: 1.3rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+}
+
+.large-btn {
+  font-size: 1.3rem;
+  padding: 16px 40px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-hero-section h1 {
+    font-size: 3rem;
+  }
+  
+  .dev-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
