@@ -216,8 +216,65 @@ export const songs = [
     isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777134370/k6xoteygfwzwt50u9uot.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777134382/Sheesha_Aakhya_Mai_Aakh_Ghali_Jo_Bairan_-_Sheesha_Aakhya_Mai_Aakh_Ghali_Jo_Bairan_128_kbps_o0sxgq.mp3"
+  },
+  {
+    id: 18,
+    title: "Ishq Di Baajiyaan",
+    artist: "Diljit Dosanjh, Shankar-Ehsaan-Loy",
+    albumId: 0,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777136087/soorma-original-motion-picture-soundtrack-deluxe-edition-shankar-ehsaan-loy_tve9jb.webp",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777136075/Ishq_Di_Baajiyaan_PenduJatt.Com.Se_riujrj.mp3"
+  },
+  {
+    id: 19,
+    title: "Sitaare",
+    artist: "Amitabh Bhattacharya, Arijit Singh, White Noise Collectives",
+    albumId: 0,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777135953/Ikkis-Hindi-2025-20251226143212-500x500_esd0a8.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777135962/Sitaare_From_quot_Ikkis_quot_-_Ikkis_128_kbps_ixkwhk.mp3"
+  },
+  {
+    id: 20,
+    title: "Bulleya",
+    artist: "Amit Mishra, Amit Mishra & Shilpa Rao, Papon, Pritam, Shilpa Rao",
+    albumId: 0,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777135841/Sultan-Hindi-2016-20190329150247-500x500_ef0jk9.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777135839/Bulleya_-_Sultan_128_kbps_vnswua.mp3"
+  },
+  {
+    id: 21,
+    title: "Gehra Hua",
+    artist: "Arijit Singh, Armaan Khan",
+    albumId: 0,
+    isTrending: true,
+    isPopular: true,
+    isNewRelease: true,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777135694/gehra-hua-dhurandhar-500-500_hkel5f.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777135708/Gehra_Hua_-_Dhurandhar_128_kbps_fj8rlx.mp3"
+  },
+  {
+    id: 22,
+    title: "Khat",
+    artist: "Navjot Ahuja",
+    albumId: 0,
+    isTrending: true,
+    isPopular: true,
+    isNewRelease: true,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777135249/Khat-Hindi-2025-20251130113423-500x500_uzbrf9.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777135261/Khat_-_Khat_128_kbps_ynsgpr.mp3"
   }
 ];
+
+
 
 
 

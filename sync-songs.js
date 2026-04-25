@@ -86,9 +86,9 @@ async function syncSongs() {
     artist: "",
     albumId: 0,
     isTrending: ,
-    isPopular: ,
+    isPopular: true,
     isNewRelease: ,
-    cover: "${matchingCover ? matchingCover.secure_url : "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687172/Dhurandhar-title-track_wolv0w.jpg"}",
+    cover: "${matchingCover}",
     file: "${file.secure_url}"
   }`;
     }).join(',\n');

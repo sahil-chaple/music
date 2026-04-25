@@ -343,15 +343,15 @@ import { songs, albums } from './songs-data.js';
     let html = '';
 
     // 1. Trending Songs
-    const trending = songs.filter(s => s.isTrending);
+    const trending = songs.filter(s => s.isTrending).reverse();
     if (trending.length > 0) html += buildShelfHTML('Trending Now', trending, 'trending');
 
     // 2. New Releases
-    const newReleases = songs.filter(s => s.isNewRelease);
+    const newReleases = songs.filter(s => s.isNewRelease).reverse();
     if (newReleases.length > 0) html += buildShelfHTML('New Releases', newReleases, 'new_releases');
 
     // 3. Popular Hits
-    const popular = songs.filter(s => s.isPopular);
+    const popular = songs.filter(s => s.isPopular).reverse();
     if (popular.length > 0) html += buildShelfHTML('Popular Hits', popular, 'popular');
 
     // 4. Recently Played
@@ -369,9 +369,9 @@ import { songs, albums } from './songs-data.js';
         const category = header.dataset.category;
         const title = header.textContent.replace('Show all', '').trim();
         let categorySongs = [];
-        if (category === 'trending') categorySongs = songs.filter(s => s.isTrending);
-        else if (category === 'new_releases') categorySongs = songs.filter(s => s.isNewRelease);
-        else if (category === 'popular') categorySongs = songs.filter(s => s.isPopular);
+        if (category === 'trending') categorySongs = songs.filter(s => s.isTrending).reverse();
+        else if (category === 'new_releases') categorySongs = songs.filter(s => s.isNewRelease).reverse();
+        else if (category === 'popular') categorySongs = songs.filter(s => s.isPopular).reverse();
         else if (category === 'recent') categorySongs = recentlyPlayed.map(id => songs.find(s => s.id === id)).filter(Boolean);
         
         showCategoryTracks(title, categorySongs);
@@ -1416,7 +1416,16 @@ import { songs, albums } from './songs-data.js';
       localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
     }
 
-    loadSong(currentSongIndex); // Refresh UI for the player
+    // Refresh UI for the player button directly without restarting the song
+    if (playerLikeBtn) {
+      if (likedSongs.includes(songId)) {
+        playerLikeBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        playerLikeBtn.classList.add('liked');
+      } else {
+        playerLikeBtn.innerHTML = '<i class="far fa-heart"></i>';
+        playerLikeBtn.classList.remove('liked');
+      }
+    }
     
     // Real-time UI updates depending on the active view
     if (currentActiveView === 'profile') {
@@ -1645,7 +1654,7 @@ import { songs, albums } from './songs-data.js';
     });
 
     sidebarTrending.addEventListener('click', () => {
-      const trending = songs.filter(s => s.isTrending);
+      const trending = songs.filter(s => s.isTrending).reverse();
       showCategoryTracks('Trending Now', trending);
     });
 
