@@ -823,7 +823,7 @@ body.light .player-bar {
   }
   
   .main {
-    padding: 12px 16px;
+    padding: 12px 16px 120px; /* Added extra bottom padding for floating player bar */
   }
   
   .menu-toggle {
@@ -882,7 +882,7 @@ body.light .player-bar {
     margin-bottom: 16px;
   }
 
-  /* Redesigned Player Bar for Mobile */
+  /* Redesigned Floating Player Bar for Mobile */
   .player-bar {
     height: var(--player-height);
     flex-direction: column;
@@ -891,6 +891,17 @@ body.light .player-bar {
     align-items: center;
     gap: 10px;
     text-align: center;
+    
+    /* Floating effect */
+    position: fixed;
+    bottom: calc(15px + env(safe-area-inset-bottom, 0px));
+    left: 12px;
+    right: 12px;
+    width: auto; /* Allow left/right to define width */
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    background: rgba(24, 24, 24, 0.85); /* Slightly more opaque for floating look */
   }
   
   .now-playing {
