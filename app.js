@@ -36,6 +36,7 @@ import { songs, albums } from './songs-data.js';
   // View Specifics
   const homeView = document.getElementById('homeView');
   const libraryView = document.getElementById('libraryView');
+  const profileView = document.getElementById('profileView');
   const aboutView = document.getElementById('aboutView');
 
   // View Specifics
@@ -54,17 +55,39 @@ import { songs, albums } from './songs-data.js';
   const sidebarLikedSongs = document.getElementById('sidebarLikedSongs');
   const sidebarTrending = document.getElementById('sidebarTrending');
 
+  // Profile Specifics
+  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  const avatarEditOverlay = document.getElementById('avatarEditOverlay');
+  const profileNameLarge = document.getElementById('profileNameLarge');
+  const profileEmail = document.getElementById('profileEmail');
+  const editProfileBtn = document.getElementById('editProfileBtn');
+  const profileLikedGrid = document.getElementById('profileLikedGrid');
+  const profileRecentRow = document.getElementById('profileRecentRow');
+  const playAllLikedBtn = document.getElementById('playAllLikedBtn');
+  const likedEmptyState = document.getElementById('likedEmptyState');
+
+  // Stats
+  const statSongsPlayed = document.getElementById('statSongsPlayed');
+  const statLikedSongs = document.getElementById('statLikedSongs');
+  const statPlaylists = document.getElementById('statPlaylists');
+  const statTopArtist = document.getElementById('statTopArtist');
+
   // --- STATE ---
   let currentSongIndex = 0;
   let isPlaying = false;
   let filteredSongs = [...songs];
-  let recentlyPlayed = JSON.parse(localStorage.getItem('recentlyPlayed')) || [];
-  let likedSongs = JSON.parse(localStorage.getItem('likedSongs')) || [];
-  let currentActiveView = 'home'; // 'home' or 'library'
-  let isShuffled = true; // Shuffle ON by default
-  let shuffleQueue = []; // Pre-built queue of song indices
-  let shuffleQueuePos = 0; // Current position in the queue
-  let userPlaylists = []; // Will be loaded from Firestore
+  let recentlyPlayed = []; 
+  let likedSongs = []; 
+  let currentActiveView = 'home'; 
+  let isShuffled = true; 
+  let shuffleQueue = []; 
+  let shuffleQueuePos = 0; 
+  let userPlaylists = []; 
+  let userStats = {
+    totalPlayed: 0,
+    topArtist: 'None'
+  };
+  let currentUser = null;
 
   const SILENT_AUDIO = "data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVoAAACAgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/f39/f3+AgICAf39/fw==";
 
@@ -74,33 +97,103 @@ import { songs, albums } from './songs-data.js';
       if (!user) {
         window.location.href = 'login.html';
       } else {
-        const userData = JSON.parse(sessionStorage.getItem('streamwave_user')) || {
-          displayName: user.displayName || user.email.split('@')[0],
-          email: user.email
-        };
-        if (userAvatar) {
-          userAvatar.textContent = userData.displayName?.charAt(0).toUpperCase() || 'U';
-          userAvatar.title = userData.displayName;
-        }
-
-        // --- FETCH USER PLAYLISTS FROM FIRESTORE ---
-        try {
-          const { doc, getDoc, db } = await import('./firebase-config.js');
-          const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-            userPlaylists = data.playlists || [];
-            renderSidebarPlaylists();
-          }
-        } catch (err) {
-          console.error("Error fetching playlists:", err);
-          // Fallback to local storage if firestore fails
-          userPlaylists = JSON.parse(localStorage.getItem('userPlaylists')) || [];
-          renderSidebarPlaylists();
-        }
+        currentUser = user;
+        await syncUserData();
+        updateUIWithUserData();
       }
     });
+  }
+
+  async function syncUserData() {
+    if (!currentUser) return;
+    
+    // Show skeletons
+    document.querySelectorAll('.skeleton-dashboard').forEach(s => s.style.display = 'flex');
+
+    try {
+      const { doc, getDoc, setDoc, db, serverTimestamp } = await import('./firebase-config.js');
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        userPlaylists = data.playlists || [];
+        likedSongs = data.likedSongs || [];
+        recentlyPlayed = data.recentlyPlayed || [];
+        userStats = data.stats || { totalPlayed: 0, topArtist: 'None' };
+        
+        // Update local session storage as well
+        sessionStorage.setItem('streamwave_user', JSON.stringify({
+          displayName: data.displayName || currentUser.displayName || currentUser.email.split('@')[0],
+          email: currentUser.email,
+          photoURL: data.photoURL || currentUser.photoURL
+        }));
+      } else {
+        // First time user - create record
+        const initialData = {
+          displayName: currentUser.displayName || currentUser.email.split('@')[0],
+          email: currentUser.email,
+          photoURL: currentUser.photoURL || '',
+          playlists: [],
+          likedSongs: [],
+          recentlyPlayed: [],
+          stats: { totalPlayed: 0, topArtist: 'None' },
+          createdAt: serverTimestamp()
+        };
+        await setDoc(userRef, initialData);
+        userPlaylists = [];
+        likedSongs = [];
+        recentlyPlayed = [];
+        userStats = initialData.stats;
+      }
+    } catch (err) {
+      console.error("Firestore sync error:", err);
+      // Fallback to local storage if needed, but Firestore is primary now
+    } finally {
+      // Hide skeletons
+      document.querySelectorAll('.skeleton-dashboard').forEach(s => s.style.display = 'none');
+    }
+  }
+
+  function updateUIWithUserData() {
+    if (!currentUser) return;
+    const userData = JSON.parse(sessionStorage.getItem('streamwave_user'));
+    
+    if (userAvatar) {
+      if (userData.photoURL) {
+        userAvatar.innerHTML = `<img src="${userData.photoURL}" alt="avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+      } else {
+        userAvatar.textContent = userData.displayName?.charAt(0).toUpperCase() || 'U';
+      }
+      userAvatar.title = userData.displayName;
+    }
+
+    renderSidebarPlaylists();
+    renderHomeDashboard();
+    if (currentActiveView === 'profile') renderProfile();
+
+    // Refresh the player's like button state now that likedSongs is loaded
+    const currentSong = songs[currentSongIndex];
+    if (currentSong && playerLikeBtn) {
+      if (likedSongs.includes(currentSong.id)) {
+        playerLikeBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        playerLikeBtn.classList.add('liked');
+      } else {
+        playerLikeBtn.innerHTML = '<i class="far fa-heart"></i>';
+        playerLikeBtn.classList.remove('liked');
+      }
+    }
+  }
+
+  async function saveUserData(update) {
+    if (!currentUser) return;
+    try {
+      const { doc, updateDoc, db } = await import('./firebase-config.js');
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, update);
+    } catch (err) {
+      console.error("Error saving user data:", err);
+    }
   }
 
   // --- NAVIGATION (SPA) ---
@@ -111,6 +204,7 @@ import { songs, albums } from './songs-data.js';
     if (viewName === 'home') {
       homeView.style.display = 'block';
       libraryView.style.display = 'none';
+      profileView.style.display = 'none';
       aboutView.style.display = 'none';
       homeNavItem.classList.add('active');
       libraryNavItem.classList.remove('active');
@@ -118,15 +212,26 @@ import { songs, albums } from './songs-data.js';
     } else if (viewName === 'library') {
       homeView.style.display = 'none';
       libraryView.style.display = 'block';
+      profileView.style.display = 'none';
       aboutView.style.display = 'none';
       homeNavItem.classList.remove('active');
       libraryNavItem.classList.add('active');
       aboutNavItem.classList.remove('active');
       renderLibrary(); // Render full library shelves
       renderAlbums(); // Refresh albums
+    } else if (viewName === 'profile') {
+      homeView.style.display = 'none';
+      libraryView.style.display = 'none';
+      profileView.style.display = 'block';
+      aboutView.style.display = 'none';
+      homeNavItem.classList.remove('active');
+      libraryNavItem.classList.remove('active');
+      aboutNavItem.classList.remove('active');
+      renderProfile();
     } else if (viewName === 'about') {
       homeView.style.display = 'none';
       libraryView.style.display = 'none';
+      profileView.style.display = 'none';
       aboutView.style.display = 'block';
       homeNavItem.classList.remove('active');
       libraryNavItem.classList.remove('active');
@@ -518,6 +623,231 @@ import { songs, albums } from './songs-data.js';
     });
   }
 
+  function renderProfile() {
+    if (!currentUser) return;
+    const userData = JSON.parse(sessionStorage.getItem('streamwave_user'));
+
+    // Header
+    if (userData.photoURL) {
+      profileAvatarLarge.innerHTML = `<img src="${userData.photoURL}" alt="avatar">`;
+    } else {
+      profileAvatarLarge.textContent = userData.displayName?.charAt(0).toUpperCase() || 'U';
+      profileAvatarLarge.style.background = 'var(--accent)';
+    }
+    profileNameLarge.textContent = userData.displayName;
+    profileEmail.textContent = userData.email;
+
+    // Stats
+    statSongsPlayed.textContent = userStats.totalPlayed || 0;
+    statLikedSongs.textContent = likedSongs.length;
+    statPlaylists.textContent = userPlaylists.length;
+    statTopArtist.textContent = userStats.topArtist || 'None';
+
+    // Liked Songs Grid
+    const liked = likedSongs.map(id => songs.find(s => s.id === id)).filter(Boolean);
+    if (liked.length > 0) {
+      profileLikedGrid.innerHTML = liked.map(song => buildCardHTML(song)).join('');
+      likedEmptyState.style.display = 'none';
+      attachSongClickListeners(profileLikedGrid);
+    } else {
+      profileLikedGrid.innerHTML = '';
+      likedEmptyState.style.display = 'block';
+    }
+
+    // Recently Played Row
+    const recent = recentlyPlayed.map(id => songs.find(s => s.id === id)).filter(Boolean);
+    if (recent.length > 0) {
+      profileRecentRow.innerHTML = recent.map(song => buildCardHTML(song)).join('');
+      attachSongClickListeners(profileRecentRow);
+    } else {
+      profileRecentRow.innerHTML = '<div style="padding: 20px; color: var(--text-secondary);">No recently played songs.</div>';
+    }
+
+    // Listeners
+    avatarEditOverlay.onclick = openEditProfileModal;
+    editProfileBtn.onclick = openEditProfileModal;
+    playAllLikedBtn.onclick = () => {
+      if (liked.length > 0) {
+        const firstIndex = songs.findIndex(s => s.id === liked[0].id);
+        loadSong(firstIndex);
+        playPause();
+      }
+    };
+  }
+
+  function openEditProfileModal() {
+    const userData = JSON.parse(sessionStorage.getItem('streamwave_user'));
+    const currentPhoto = userData.photoURL || '';
+    const currentName  = userData.displayName || '';
+
+    infoModalTitle.textContent = 'Edit Profile';
+    infoModalContent.innerHTML = `
+      <form id="editProfileForm" class="modal-body">
+
+        <!-- ── Avatar Picker ── -->
+        <div class="avatar-picker-section">
+          <div class="avatar-picker-preview-ring" id="avatarPreviewRing">
+            <div class="avatar-picker-preview" id="avatarPickerPreview">
+              ${currentPhoto
+                ? `<img src="${currentPhoto}" alt="Current photo" id="avatarPreviewImg">`
+                : `<span id="avatarPreviewInitial">${currentName.charAt(0).toUpperCase() || 'U'}</span>`}
+            </div>
+          </div>
+          <div class="avatar-picker-actions">
+            <button type="button" class="avatar-action-btn" id="uploadPhotoBtn">
+              <i class="fas fa-upload"></i> Upload Photo
+            </button>
+            <button type="button" class="avatar-action-btn avatar-action-url-btn" id="useUrlBtn">
+              <i class="fas fa-link"></i> Use URL
+            </button>
+            ${currentPhoto ? `<button type="button" class="avatar-action-btn avatar-action-remove-btn" id="removePhotoBtn">
+              <i class="fas fa-trash-alt"></i> Remove
+            </button>` : ''}
+          </div>
+          <!-- URL input (hidden by default) -->
+          <div class="modal-form-group" id="urlInputGroup" style="display:none; width:100%; margin-top:12px;">
+            <label>Photo URL</label>
+            <input type="url" id="editAvatarUrl" class="modal-input"
+              value="${currentPhoto.startsWith('data:') ? '' : currentPhoto}"
+              placeholder="https://example.com/photo.jpg">
+          </div>
+          <p class="avatar-picker-hint" id="avatarPickerHint"></p>
+        </div>
+
+        <!-- ── Display Name ── -->
+        <div class="modal-form-group">
+          <label>Display Name</label>
+          <input type="text" id="editDisplayName" class="modal-input" value="${currentName}" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="modal-btn modal-btn-secondary" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="modal-btn modal-btn-primary" id="saveProfileBtn">Save Changes</button>
+        </div>
+      </form>
+    `;
+
+    infoModalOverlay.classList.add('active');
+
+    // ── State for new photo ──
+    let pendingPhotoDataUrl = currentPhoto; // holds the final value to save
+
+    const profilePicInput = document.getElementById('profilePicInput');
+    const avatarPreview   = document.getElementById('avatarPickerPreview');
+    const hintEl          = document.getElementById('avatarPickerHint');
+    const urlGroup        = document.getElementById('urlInputGroup');
+
+    // Helper: update preview from any URL/data-url
+    function setPreview(src, hint = '') {
+      pendingPhotoDataUrl = src;
+      hintEl.textContent = hint;
+      if (src) {
+        avatarPreview.innerHTML = `<img src="${src}" alt="Preview" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      } else {
+        const nameVal = document.getElementById('editDisplayName').value;
+        avatarPreview.innerHTML = `<span style="font-size:40px;font-weight:900;color:#000;">${nameVal.charAt(0).toUpperCase() || 'U'}</span>`;
+      }
+    }
+
+    // Upload Photo button → trigger hidden file input
+    document.getElementById('uploadPhotoBtn').onclick = () => {
+      profilePicInput.value = '';          // reset so same file can be re-selected
+      profilePicInput.click();
+    };
+
+    // File selected → FileReader → base64 data URL
+    profilePicInput.onchange = () => {
+      const file = profilePicInput.files[0];
+      if (!file) return;
+
+      // Size guard (5 MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        hintEl.textContent = '⚠️ Image must be under 5 MB.';
+        hintEl.style.color = '#ff6b6b';
+        return;
+      }
+
+      hintEl.style.color = 'var(--text-secondary)';
+      const reader = new FileReader();
+      reader.onload = (ev) => setPreview(ev.target.result, '✓ Photo ready to save');
+      reader.readAsDataURL(file);
+    };
+
+    // URL toggle
+    document.getElementById('useUrlBtn').onclick = () => {
+      const isVisible = urlGroup.style.display !== 'none';
+      urlGroup.style.display = isVisible ? 'none' : 'block';
+    };
+
+    // Live URL preview on input
+    const urlInput = document.getElementById('editAvatarUrl');
+    if (urlInput) {
+      urlInput.oninput = () => {
+        const val = urlInput.value.trim();
+        if (val) setPreview(val, 'Preview from URL');
+        else setPreview(currentPhoto, '');
+      };
+    }
+
+    // Remove photo
+    const removeBtn = document.getElementById('removePhotoBtn');
+    if (removeBtn) {
+      removeBtn.onclick = () => {
+        setPreview('', 'Photo removed');
+        if (urlInput) urlInput.value = '';
+      };
+    }
+
+    // ── Form submit ──
+    const form = document.getElementById('editProfileForm');
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const newName  = document.getElementById('editDisplayName').value.trim();
+      // If URL field is visible and has a value, prefer it over the uploaded photo
+      const urlVal   = (urlInput && urlGroup.style.display !== 'none') ? urlInput.value.trim() : '';
+      const newPhoto = urlVal || pendingPhotoDataUrl;
+
+      const saveBtn = document.getElementById('saveProfileBtn');
+      saveBtn.textContent = 'Saving…';
+      saveBtn.disabled = true;
+
+      try {
+        const { updateProfile } = await import('./firebase-config.js');
+        
+        // Firebase Auth has a strict length limit on photoURL (fails with data URLs).
+        // Only update Auth profile if it's a normal URL or empty.
+        // Firestore saveUserData handles the long data URLs perfectly.
+        const authUpdates = { displayName: newName };
+        if (!newPhoto || !newPhoto.startsWith('data:')) {
+          authUpdates.photoURL = newPhoto;
+        }
+        await updateProfile(currentUser, authUpdates);
+        
+        await saveUserData({ displayName: newName, photoURL: newPhoto });
+
+        sessionStorage.setItem('streamwave_user', JSON.stringify({
+          ...userData,
+          displayName: newName,
+          photoURL: newPhoto
+        }));
+
+        infoModalOverlay.classList.remove('active');
+        updateUIWithUserData();
+        if (currentActiveView === 'profile') renderProfile();
+      } catch (err) {
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.disabled = false;
+        hintEl.textContent = '⚠️ Error: ' + err.message;
+        hintEl.style.color = '#ff6b6b';
+      }
+    };
+
+    document.getElementById('cancelEditBtn').onclick = () => {
+      profilePicInput.onchange = null; // detach listener
+      infoModalOverlay.classList.remove('active');
+    };
+  }
+
   function applyDynamicTheme([r, g, b]) {
     const mainEl = document.querySelector('.main');
     if (!mainEl) return;
@@ -880,19 +1210,10 @@ import { songs, albums } from './songs-data.js';
   }
 
   async function savePlaylistsToStorage() {
-    // 1. Save to local storage for immediate speed
-    localStorage.setItem('userPlaylists', JSON.stringify(userPlaylists));
-
-    // 2. Sync with Firestore for persistence
-    const user = auth.currentUser;
-    if (user) {
-      try {
-        const { doc, setDoc, db } = await import('./firebase-config.js');
-        const userRef = doc(db, "users", user.uid);
-        await setDoc(userRef, { playlists: userPlaylists }, { merge: true });
-      } catch (err) {
-        console.error("Firestore sync failed:", err);
-      }
+    if (currentUser) {
+      await saveUserData({ playlists: userPlaylists });
+    } else {
+      localStorage.setItem('userPlaylists', JSON.stringify(userPlaylists));
     }
   }
 
@@ -992,6 +1313,15 @@ import { songs, albums } from './songs-data.js';
             playlist.songIds.unshift(currentSong.id);
             savePlaylistsToStorage();
             alert(`Added "${currentSong.title}" to "${playlist.name}"`);
+            
+            // Real-time UI update if viewing this specific playlist
+            if (currentActiveView === 'library' && tracklistView.style.display === 'block') {
+              const detailTitle = document.getElementById('detailTitle');
+              if (detailTitle.textContent === playlist.name) {
+                const updatedSongs = playlist.songIds.map(id => songs.find(s => s.id === id)).filter(Boolean);
+                showCategoryTracks(playlist.name, updatedSongs, plId);
+              }
+            }
           } else {
             alert(`"${currentSong.title}" is already in "${playlist.name}"`);
           }
@@ -1014,6 +1344,7 @@ import { songs, albums } from './songs-data.js';
     currentSongIndex = index;
     localStorage.setItem('lastPlayedIndex', index);
     addToRecentlyPlayed(song.id);
+    incrementPlayCount(song);
 
     audio.load();
     if (isPlaying) {
@@ -1044,11 +1375,63 @@ import { songs, albums } from './songs-data.js';
     }
   }
 
-  function addToRecentlyPlayed(songId) {
+  async function addToRecentlyPlayed(songId) {
     recentlyPlayed = recentlyPlayed.filter(id => id !== songId);
     recentlyPlayed.unshift(songId);
-    recentlyPlayed = recentlyPlayed.slice(0, 10);
-    localStorage.setItem('recentlyPlayed', JSON.stringify(recentlyPlayed));
+    recentlyPlayed = recentlyPlayed.slice(0, 15); // Limit to 15
+    
+    if (currentUser) {
+      await saveUserData({ recentlyPlayed });
+    } else {
+      localStorage.setItem('recentlyPlayed', JSON.stringify(recentlyPlayed));
+    }
+  }
+
+  async function incrementPlayCount(song) {
+    if (!currentUser) return;
+    userStats.totalPlayed++;
+    
+    // Simple top artist logic: most played artist
+    // For now, let's just update the total and use a placeholder or basic check
+    // Real logic would track artist play counts in an object
+    userStats.topArtist = song.artist; // Placeholder: last played artist as top artist for now
+
+    await saveUserData({ stats: userStats });
+    if (currentActiveView === 'profile') renderProfile();
+  }
+
+  async function toggleLike() {
+    const songId = songs[currentSongIndex].id;
+    const isLiked = likedSongs.includes(songId);
+
+    if (isLiked) {
+      likedSongs = likedSongs.filter(id => id !== songId);
+    } else {
+      likedSongs.unshift(songId); // Add to the top of the list instead of the bottom
+    }
+
+    if (currentUser) {
+      await saveUserData({ likedSongs });
+    } else {
+      localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+    }
+
+    loadSong(currentSongIndex); // Refresh UI for the player
+    
+    // Real-time UI updates depending on the active view
+    if (currentActiveView === 'profile') {
+      renderProfile();
+    } else if (currentActiveView === 'library' && document.getElementById('likedGrid')) {
+      // Re-render the library view if it's open, or if we are inside the liked songs view
+      renderLibrary();
+      
+      // If we are currently viewing the full "Liked Songs" playlist view, update it
+      const detailTitle = document.getElementById('detailTitle');
+      if (tracklistView.style.display === 'block' && detailTitle.textContent === 'Liked Songs') {
+        const liked = likedSongs.map(id => songs.find(s => s.id === id)).filter(Boolean);
+        showCategoryTracks('Liked Songs', liked);
+      }
+    }
   }
 
   function playPause() {
@@ -1135,26 +1518,7 @@ import { songs, albums } from './songs-data.js';
     });
   }
 
-  function toggleLikeCurrentSong() {
-    const song = songs[currentSongIndex];
-    if (!song) return;
 
-    if (likedSongs.includes(song.id)) {
-      likedSongs = likedSongs.filter(id => id !== song.id);
-      playerLikeBtn.innerHTML = '<i class="far fa-heart"></i>';
-      playerLikeBtn.classList.remove('liked');
-    } else {
-      likedSongs.unshift(song.id);
-      playerLikeBtn.innerHTML = '<i class="fas fa-heart"></i>';
-      playerLikeBtn.classList.add('liked');
-    }
-    localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
-
-    // Refresh library if we are on it
-    if (currentActiveView === 'library' && tracklistView.style.display === 'none') {
-      renderLibrary();
-    }
-  }
 
   // --- 3D SCROLL & ANIMATION ---
   let globalObserver = null;
@@ -1186,7 +1550,7 @@ import { songs, albums } from './songs-data.js';
 
     // Like button listener
     if (playerLikeBtn) {
-      playerLikeBtn.addEventListener('click', toggleLikeCurrentSong);
+      playerLikeBtn.addEventListener('click', toggleLike);
     }
 
     // Load state
@@ -1337,7 +1701,7 @@ import { songs, albums } from './songs-data.js';
       });
 
       document.getElementById('profileItem').addEventListener('click', () => {
-        alert("Profile feature coming soon!");
+        switchView('profile');
         menu.remove();
       });
 

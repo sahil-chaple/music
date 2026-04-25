@@ -17,6 +17,9 @@ import {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
@@ -55,5 +58,8 @@ export {
   doc,
   setDoc,
   getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
   serverTimestamp
 };

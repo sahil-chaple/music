@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>StreamWave · Seamless Music</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link rel="stylesheet" href="main.css">
@@ -15,10 +16,10 @@
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
       <div class="logo" id="logoBtn" style="cursor: pointer;">
-        <i class="fab fa-spotify" style="color: var(--accent);"></i> StreamWave
+        <img src="images/logo.png" class="logo-img" alt="StreamWave Logo"> StreamWave
       </div>
       <ul class="nav-menu">
-        <li class="nav-item active" id="homeNavItem"><i class="fas fa-home"></i> Home</li>
+        <li class="nav-item" id="homeNavItem"><i class="fas fa-home"></i> Home</li>
         <li class="nav-item" id="libraryNavItem"><i class="fas fa-book-open"></i> Library</li>
         <li class="nav-item" id="aboutNavItem"><i class="fas fa-info-circle"></i> About</li>
       </ul>
@@ -43,7 +44,7 @@
         <div style="display: flex; align-items: center; flex: 1;">
           <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
           <div class="mobile-logo" id="mobileLogo">
-            <i class="fab fa-spotify"></i> StreamWave
+            <img src="images/logo.png" class="logo-img" alt="StreamWave Logo"> StreamWave
           </div>
           <div class="search-wrapper">
             <i class="fas fa-search search-icon"></i>
@@ -61,6 +62,11 @@
 
         <!-- Dashboard (Dynamic Shelves) -->
         <div id="homeDashboard">
+          <!-- Skeleton Loaders (Hidden after fetch) -->
+          <div class="skeleton-dashboard">
+            <div class="skeleton-shelf"></div>
+            <div class="skeleton-shelf"></div>
+          </div>
           <!-- Shelves will be injected here by JS -->
         </div>
 
@@ -215,6 +221,66 @@
         </div>
       </div>
 
+      <!-- PROFILE VIEW -->
+      <div id="profileView" class="view" style="display: none;">
+        <div class="profile-header">
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar-large" id="profileAvatarLarge">U</div>
+            <div class="avatar-edit-overlay" id="avatarEditOverlay">
+              <i class="fas fa-camera"></i>
+              <span>Change Image</span>
+            </div>
+          </div>
+          <div class="profile-info">
+            <span class="profile-tag">PROFILE</span>
+            <h1 id="profileNameLarge">User Name</h1>
+            <p id="profileEmail">user@example.com</p>
+            <div class="profile-actions">
+              <button class="edit-profile-btn" id="editProfileBtn"><i class="fas fa-edit"></i> Edit Profile</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Stats Section -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="statSongsPlayed">0</div>
+            <div class="stat-label">Songs Played</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statLikedSongs">0</div>
+            <div class="stat-label">Liked Songs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statPlaylists">0</div>
+            <div class="stat-label">Playlists</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statTopArtist" style="font-size: 1.2rem;">None</div>
+            <div class="stat-label">Top Artist</div>
+          </div>
+        </div>
+
+        <!-- Liked Songs Shelf (Profile) -->
+        <div class="profile-shelf">
+          <div class="shelf-header">
+            <h3>Liked Songs</h3>
+          </div>
+          <div class="cards-grid" id="profileLikedGrid">
+            <!-- Liked songs injected here -->
+          </div>
+          <div id="likedEmptyState" class="empty-state" style="display: none;">No liked songs yet</div>
+        </div>
+
+        <!-- Recently Played (Profile) -->
+        <div class="profile-shelf">
+          <h3 class="shelf-header">Recently Played</h3>
+          <div class="shelf-row" id="profileRecentRow">
+            <!-- Recently played injected here -->
+          </div>
+        </div>
+      </div>
+
       <!-- APP FOOTER -->
       <footer class="app-footer">
         <div class="footer-content">
@@ -310,6 +376,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Hidden profile picture file input -->
+  <input type="file" id="profilePicInput" accept="image/*" style="display:none;">
 
   <audio id="audioPlayer" preload="metadata"></audio>
   <script type="module" src="app.js"></script>
