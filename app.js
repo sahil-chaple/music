@@ -10,6 +10,7 @@ import { songs, albums } from './songs-data.js';
   const playPauseBtn = document.getElementById('playPauseBtn');
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
+  const repeatBtn = document.getElementById('repeatBtn');
   const progressBar = document.getElementById('progressBar');
   const progressFill = document.getElementById('progressFill');
   const currentTimeSpan = document.getElementById('currentTime');
@@ -53,6 +54,7 @@ import { songs, albums } from './songs-data.js';
   const createPlaylistBtn = document.getElementById('createPlaylistBtn');
   const customPlaylistsContainer = document.getElementById('customPlaylistsContainer');
   const sidebarLikedSongs = document.getElementById('sidebarLikedSongs');
+  const sidebarQueue = document.getElementById('sidebarQueue');
   const sidebarTrending = document.getElementById('sidebarTrending');
 
   // Profile Specifics
@@ -83,6 +85,8 @@ import { songs, albums } from './songs-data.js';
   let shuffleQueue = []; 
   let shuffleQueuePos = 0; 
   let userPlaylists = []; 
+  let repeatMode = 0; // 0 = all, 1 = one
+  let playQueue = []; 
   let userStats = {
     totalPlayed: 0,
     topArtist: 'None'
@@ -288,13 +292,20 @@ import { songs, albums } from './songs-data.js';
       return;
     }
 
-    songsContainer.innerHTML = songsToRender.map(song => `
-      <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-        <img class="card-cover" src="${song.cover}" alt="${song.title}">
-        <div class="card-title">${song.title}</div>
-        <div class="card-artist">${song.artist}</div>
-      </div>
-    `).join('');
+    songsContainer.innerHTML = songsToRender.map(song => {
+      const isLiked = likedSongs.includes(song.id);
+      return `
+        <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
+          <div style="position:absolute; top:8px; right:8px; z-index:10; display: flex; gap: 8px;">
+            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px; margin-top: 5px;"></i>' : ''}
+            <button class="song-options-btn" data-song-id="${song.id}" style="position:static;"><i class="fas fa-ellipsis-v"></i></button>
+          </div>
+          <img class="card-cover" src="${song.cover}" alt="${song.title}">
+          <div class="card-title">${song.title}</div>
+          <div class="card-artist">${song.artist}</div>
+        </div>
+      `;
+    }).join('');
 
     attachSongClickListeners(songsContainer);
   }
@@ -302,7 +313,8 @@ import { songs, albums } from './songs-data.js';
   function attachSongClickListeners(container) {
     container.querySelectorAll('.song-card').forEach(card => {
       // Click logic
-      card.addEventListener('click', () => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.song-options-btn')) return;
         const songId = parseInt(card.dataset.songId);
         if (isNaN(songId)) return; // prevent album card error
         const index = songs.findIndex(s => s.id === songId);
@@ -386,13 +398,20 @@ import { songs, albums } from './songs-data.js';
   }
 
   function buildShelfHTML(title, shelfSongs, categoryKey) {
-    const cardsHtml = shelfSongs.map(song => `
-      <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-        <img class="card-cover" src="${song.cover}" alt="${song.title}">
-        <div class="card-title">${song.title}</div>
-        <div class="card-artist">${song.artist}</div>
-      </div>
-    `).join('');
+    const cardsHtml = shelfSongs.map(song => {
+      const isLiked = likedSongs.includes(song.id);
+      return `
+        <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
+          <div style="position:absolute; top:8px; right:8px; z-index:10; display: flex; gap: 8px;">
+            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px; margin-top: 5px;"></i>' : ''}
+            <button class="song-options-btn" data-song-id="${song.id}" style="position:static;"><i class="fas fa-ellipsis-v"></i></button>
+          </div>
+          <img class="card-cover" src="${song.cover}" alt="${song.title}">
+          <div class="card-title">${song.title}</div>
+          <div class="card-artist">${song.artist}</div>
+        </div>
+      `;
+    }).join('');
 
     return `
       <div class="home-shelf scroll-reveal">
@@ -490,6 +509,7 @@ import { songs, albums } from './songs-data.js';
   function buildCardHTML(song) {
     return `
       <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
+        <button class="song-options-btn" data-song-id="${song.id}" style="position:absolute; top:8px; right:8px; z-index:10;"><i class="fas fa-ellipsis-v"></i></button>
         <div class="card-3d-wrapper">
           <img class="card-cover" src="${song.cover}" alt="${song.title}">
           <div class="card-title">${song.title}</div>
@@ -896,16 +916,23 @@ import { songs, albums } from './songs-data.js';
     const mainEl = document.querySelector('.main');
     if (mainEl) mainEl.scrollTop = 0;
 
-    trackList.innerHTML = albumSongs.map((song, index) => `
-      <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
-        <div class="track-number">${index + 1}</div>
-        <div class="track-details">
-          <div class="track-name">${song.title}</div>
-          <div class="track-artist">${song.artist}</div>
+    trackList.innerHTML = albumSongs.map((song, index) => {
+      const isLiked = likedSongs.includes(song.id);
+      return `
+        <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
+          <div class="track-number">${index + 1}</div>
+          <div class="track-details">
+            <div class="track-name">${song.title}</div>
+            <div class="track-artist">${song.artist}</div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px;"></i>' : ''}
+            <button class="song-options-btn" data-song-id="${song.id}"><i class="fas fa-ellipsis-v"></i></button>
+            <div class="track-duration" id="dur-${song.id}">—</div>
+          </div>
         </div>
-        <div class="track-duration" id="dur-${song.id}">—</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Dynamically load real durations from audio metadata
     albumSongs.forEach(song => {
@@ -921,7 +948,8 @@ import { songs, albums } from './songs-data.js';
     });
 
     document.querySelectorAll('.track-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.song-options-btn')) return;
         const songId = parseInt(item.dataset.songId);
         const index = songs.findIndex(s => s.id === songId);
         loadSong(index);
@@ -977,19 +1005,24 @@ import { songs, albums } from './songs-data.js';
     const mainEl = document.querySelector('.main');
     if (mainEl) mainEl.scrollTop = 0;
 
-    trackList.innerHTML = categorySongs.map((song, index) => `
-      <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
-        <div class="track-number">${index + 1}</div>
-        <div class="track-details">
-          <div class="track-name">${song.title}</div>
-          <div class="track-artist">${song.artist}</div>
+    trackList.innerHTML = categorySongs.map((song, index) => {
+      const isLiked = likedSongs.includes(song.id);
+      return `
+        <div class="track-item ${songs[currentSongIndex].id === song.id ? 'active' : ''}" data-song-id="${song.id}">
+          <div class="track-number">${index + 1}</div>
+          <div class="track-details">
+            <div class="track-name">${song.title}</div>
+            <div class="track-artist">${song.artist}</div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
+            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px;"></i>' : ''}
+            <button class="song-options-btn" data-song-id="${song.id}"><i class="fas fa-ellipsis-v"></i></button>
+            <div class="track-duration" id="dur-${song.id}">—</div>
+            ${playlistId ? `<button class="remove-track-btn" data-song-id="${song.id}" title="Remove from playlist"><i class="fas fa-minus-circle"></i></button>` : ''}
+          </div>
         </div>
-        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px;">
-          <div class="track-duration" id="dur-${song.id}">—</div>
-          ${playlistId ? `<button class="remove-track-btn" data-song-id="${song.id}" title="Remove from playlist"><i class="fas fa-minus-circle"></i></button>` : ''}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Dynamically load real durations
     categorySongs.forEach(song => {
@@ -1008,6 +1041,7 @@ import { songs, albums } from './songs-data.js';
       item.addEventListener('click', (e) => {
         // If clicking the remove button, don't play the song
         if (e.target.closest('.remove-track-btn')) return;
+        if (e.target.closest('.song-options-btn')) return;
 
         const songId = parseInt(item.dataset.songId);
         const index = songs.findIndex(s => s.id === songId);
@@ -1267,8 +1301,9 @@ import { songs, albums } from './songs-data.js';
     showCategoryTracks(plName, updatedSongs, plId);
   }
 
-  function openAddToPlaylistModal() {
-    const currentSong = songs[currentSongIndex];
+  function openAddToPlaylistModal(targetSongId = null) {
+    const songId = targetSongId !== null ? targetSongId : songs[currentSongIndex].id;
+    const currentSong = songs.find(s => s.id === parseInt(songId));
     if (!currentSong) return;
 
     infoModalTitle.textContent = "Add to Playlist";
@@ -1312,7 +1347,7 @@ import { songs, albums } from './songs-data.js';
           if (!playlist.songIds.includes(currentSong.id)) {
             playlist.songIds.unshift(currentSong.id);
             savePlaylistsToStorage();
-            alert(`Added "${currentSong.title}" to "${playlist.name}"`);
+            showNotification(`Added "${currentSong.title}" to "${playlist.name}"`, 'fas fa-check-circle');
             
             // Real-time UI update if viewing this specific playlist
             if (currentActiveView === 'library' && tracklistView.style.display === 'block') {
@@ -1323,7 +1358,7 @@ import { songs, albums } from './songs-data.js';
               }
             }
           } else {
-            alert(`"${currentSong.title}" is already in "${playlist.name}"`);
+            showNotification(`"${currentSong.title}" is already in "${playlist.name}"`, 'fas fa-exclamation-circle');
           }
           infoModalOverlay.classList.remove('active');
         }
@@ -1400,14 +1435,16 @@ import { songs, albums } from './songs-data.js';
     if (currentActiveView === 'profile') renderProfile();
   }
 
-  async function toggleLike() {
-    const songId = songs[currentSongIndex].id;
+  async function toggleLike(targetId = null) {
+    const songId = targetId !== null ? targetId : songs[currentSongIndex].id;
     const isLiked = likedSongs.includes(songId);
 
     if (isLiked) {
       likedSongs = likedSongs.filter(id => id !== songId);
+      showNotification('Removed from Liked Songs', 'fas fa-heart-broken');
     } else {
       likedSongs.unshift(songId); // Add to the top of the list instead of the bottom
+      showNotification('Added to Liked Songs', 'fas fa-heart');
     }
 
     if (currentUser) {
@@ -1426,6 +1463,9 @@ import { songs, albums } from './songs-data.js';
         playerLikeBtn.classList.remove('liked');
       }
     }
+    
+    // Real-time UI updates for all visible hearts
+    updateAllVisibleHearts(songId, !isLiked);
     
     // Real-time UI updates depending on the active view
     if (currentActiveView === 'profile') {
@@ -1501,7 +1541,29 @@ import { songs, albums } from './songs-data.js';
     if (isShuffled) buildShuffleQueue(currentSongIndex);
   }
 
+  function toggleRepeat() {
+    repeatMode = repeatMode === 0 ? 1 : 0;
+    if (repeatBtn) {
+      if (repeatMode === 1) {
+        repeatBtn.classList.add('active', 'repeat-one');
+        repeatBtn.title = 'Repeat: One';
+      } else {
+        repeatBtn.classList.remove('active', 'repeat-one');
+        repeatBtn.title = 'Repeat: All';
+      }
+    }
+  }
+
   function nextSong() {
+    if (playQueue.length > 0) {
+      const nextId = playQueue.shift();
+      const idx = songs.findIndex(s => s.id === nextId);
+      if (idx !== -1) {
+        loadSong(idx);
+        if (isPlaying) audio.play();
+        return;
+      }
+    }
     const nextIdx = isShuffled ? getNextShuffleIndex() : (currentSongIndex + 1) % songs.length;
     loadSong(nextIdx);
     if (isPlaying) audio.play();
@@ -1517,6 +1579,53 @@ import { songs, albums } from './songs-data.js';
     const mins = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${mins}:${s < 10 ? '0' : ''}${s}`;
+  }
+
+  function updateAllVisibleHearts(songId, isLikedNow) {
+    const instances = document.querySelectorAll(`[data-song-id="${songId}"]`);
+    instances.forEach(instance => {
+      // Find the button to use as a reference point
+      const btn = instance.querySelector('.song-options-btn');
+      if (!btn) return;
+      
+      const container = btn.parentElement;
+      const existingHeart = container.querySelector('.fa-heart');
+      
+      if (isLikedNow) {
+        if (!existingHeart) {
+          const heart = document.createElement('i');
+          heart.className = 'fas fa-heart';
+          heart.style.color = 'var(--accent)';
+          heart.style.fontSize = '14px';
+          // Check if it's a card (absolute) or track item (flex)
+          if (instance.classList.contains('song-card')) {
+             heart.style.marginTop = '5px';
+          }
+          container.insertBefore(heart, btn);
+        }
+      } else {
+        if (existingHeart) existingHeart.remove();
+      }
+    });
+  }
+
+  function showNotification(message, icon = 'fas fa-info-circle') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<i class="${icon}"></i><span>${message}</span>`;
+    
+    container.appendChild(toast);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      toast.classList.add('removing');
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }, 3000);
   }
 
   // --- LOGOUT ---
@@ -1567,6 +1676,15 @@ import { songs, albums } from './songs-data.js';
     if (lastIdx !== null) loadSong(parseInt(lastIdx));
     else loadSong(0);
 
+    const lastTime = localStorage.getItem('lastPlayedTime');
+    if (lastTime) {
+      audio.addEventListener('loadedmetadata', () => {
+        if (!isPlaying) {
+          audio.currentTime = parseFloat(lastTime);
+        }
+      }, { once: true });
+    }
+
     // Initialize shuffle queue from current song
     buildShuffleQueue(currentSongIndex);
     // Set shuffle button state visually
@@ -1576,6 +1694,104 @@ import { songs, albums } from './songs-data.js';
       shuffleBtn.title = isShuffled ? 'Shuffle: On' : 'Shuffle: Off';
       shuffleBtn.addEventListener('click', toggleShuffle);
     }
+
+    if (repeatBtn) {
+      repeatBtn.addEventListener('click', toggleRepeat);
+    }
+    
+    // Inject global queue menu container
+    const queueMenu = document.createElement('div');
+    queueMenu.className = 'song-options-menu';
+    document.body.appendChild(queueMenu);
+    
+    let currentMenuSongId = null;
+
+    const updateQueueMenu = (songId) => {
+      const isLiked = likedSongs.includes(songId);
+      const isInQueue = playQueue.includes(songId);
+      
+      queueMenu.innerHTML = `
+        <div class="song-options-item" id="menuPlayNext"><i class="fas fa-step-forward"></i> Play Next</div>
+        <div class="song-options-item" id="menuAddQueue">
+          <i class="${isInQueue ? 'fas fa-minus-circle' : 'fas fa-list'}"></i> 
+          ${isInQueue ? 'Remove from Queue' : 'Add to Queue'}
+        </div>
+        <div class="song-options-item" id="menuAddToPlaylist"><i class="fas fa-plus"></i> Add to Playlist</div>
+        <div class="song-options-item" id="menuToggleLike">
+          <i class="${isLiked ? 'fas fa-heart-broken' : 'fas fa-heart'}"></i> 
+          ${isLiked ? 'Remove from Liked' : 'Add to Liked'}
+        </div>
+      `;
+
+      document.getElementById('menuPlayNext').onclick = () => {
+        // Remove if already exists to move to top (prevent duplicates)
+        playQueue = playQueue.filter(id => id !== songId);
+        playQueue.unshift(songId);
+        queueMenu.classList.remove('active');
+        showNotification('Added to Play Next', 'fas fa-step-forward');
+        if (detailTitle.textContent === 'Current Queue' && currentActiveView === 'library' && tracklistView.style.display === 'block') {
+          const queueTracks = playQueue.map(id => songs.find(s => s.id === id)).filter(Boolean);
+          showCategoryTracks('Current Queue', queueTracks);
+        }
+      };
+      document.getElementById('menuAddQueue').onclick = () => {
+        if (isInQueue) {
+          // Remove from queue
+          playQueue = playQueue.filter(id => id !== songId);
+          showNotification('Removed from Queue', 'fas fa-minus-circle');
+        } else {
+          // Add to queue
+          playQueue.push(songId);
+          showNotification('Added to Queue', 'fas fa-list');
+        }
+        queueMenu.classList.remove('active');
+        
+        // Refresh view if in Queue view
+        if (detailTitle.textContent === 'Current Queue' && currentActiveView === 'library' && tracklistView.style.display === 'block') {
+          const queueTracks = playQueue.map(id => songs.find(s => s.id === id)).filter(Boolean);
+          showCategoryTracks('Current Queue', queueTracks);
+        }
+      };
+      document.getElementById('menuAddToPlaylist').onclick = () => {
+        queueMenu.classList.remove('active');
+        openAddToPlaylistModal(songId);
+      };
+      document.getElementById('menuToggleLike').onclick = () => {
+        toggleLike(songId);
+        queueMenu.classList.remove('active');
+      };
+    };
+    
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.song-options-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = e.target.closest('.song-options-btn');
+        currentMenuSongId = parseInt(btn.dataset.songId);
+        updateQueueMenu(currentMenuSongId);
+        const rect = btn.getBoundingClientRect();
+        queueMenu.style.top = (rect.bottom + window.scrollY) + 'px';
+        queueMenu.style.left = (rect.left + window.scrollX - 100) + 'px';
+        queueMenu.classList.add('active');
+      } else if (!e.target.closest('.song-options-menu')) {
+        queueMenu.classList.remove('active');
+      }
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.song-options-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const btn = e.target.closest('.song-options-btn');
+        currentMenuSongId = parseInt(btn.dataset.songId);
+        const rect = btn.getBoundingClientRect();
+        queueMenu.style.top = (rect.bottom + window.scrollY) + 'px';
+        queueMenu.style.left = (rect.left + window.scrollX - 100) + 'px';
+        queueMenu.classList.add('active');
+      } else if (!e.target.closest('.song-options-menu')) {
+        queueMenu.classList.remove('active');
+      }
+    });
 
     const vol = localStorage.getItem('playerVolume');
     if (vol !== null) {
@@ -1595,6 +1811,7 @@ import { songs, albums } from './songs-data.js';
         progressFill.style.width = `${percent}%`;
         currentTimeSpan.textContent = formatTime(audio.currentTime);
         durationTimeSpan.textContent = formatTime(audio.duration);
+        localStorage.setItem('lastPlayedTime', audio.currentTime);
       }
     });
 
@@ -1614,14 +1831,18 @@ import { songs, albums } from './songs-data.js';
       playerArtist.textContent = "Please try another track";
       isPlaying = false;
       updatePlayButton();
-
-      alert(errorMsg);
+      showNotification(errorMsg, 'fas fa-exclamation-triangle');
     });
 
     // Auto-advance to next shuffled song when current one ends
     audio.addEventListener('ended', () => {
       isPlaying = true; // keep isPlaying true so loadSong triggers audio.play()
-      nextSong();
+      if (repeatMode === 1 && playQueue.length === 0) {
+        audio.currentTime = 0;
+        audio.play();
+      } else {
+        nextSong();
+      }
     });
 
     progressBar.addEventListener('click', (e) => {
@@ -1651,6 +1872,11 @@ import { songs, albums } from './songs-data.js';
     sidebarLikedSongs.addEventListener('click', () => {
       const liked = likedSongs.map(id => songs.find(s => s.id === id)).filter(Boolean);
       showCategoryTracks('Liked Songs', liked);
+    });
+
+    sidebarQueue.addEventListener('click', () => {
+      const queueTracks = playQueue.map(id => songs.find(s => s.id === id)).filter(Boolean);
+      showCategoryTracks('Current Queue', queueTracks);
     });
 
     sidebarTrending.addEventListener('click', () => {
@@ -1730,7 +1956,7 @@ import { songs, albums } from './songs-data.js';
       });
 
       document.getElementById('settingsItem').addEventListener('click', () => {
-        alert("Settings feature coming soon!");
+        showNotification("Settings feature coming soon!", 'fas fa-tools');
         menu.remove();
       });
 
@@ -1824,21 +2050,21 @@ import { songs, albums } from './songs-data.js';
           handleSearch(transcript);
         };
 
-        recognition.onerror = function (event) {
-          console.error("Speech recognition error:", event.error);
-          micBtn.classList.remove('recording');
-          isRecording = false;
-
-          if (event.error === 'not-allowed') {
-            alert("Microphone access denied. If you are opening this file directly (file://), Chrome blocks the microphone. You must run it through a local server (like Live Server or localhost).");
-          } else if (event.error === 'network') {
-            alert("Network error: Speech recognition requires an internet connection.");
-          } else if (event.error === 'no-speech') {
-            searchInput.placeholder = "No speech detected. Try again.";
-          } else {
-            alert("Microphone error: " + event.error);
-          }
-        };
+          recognition.onerror = function (event) {
+            console.error("Speech recognition error:", event.error);
+            micBtn.classList.remove('recording');
+            isRecording = false;
+  
+            if (event.error === 'not-allowed') {
+              showNotification("Microphone access denied.", 'fas fa-microphone-slash');
+            } else if (event.error === 'network') {
+              showNotification("Network error: Check your internet.", 'fas fa-wifi');
+            } else if (event.error === 'no-speech') {
+              searchInput.placeholder = "No speech detected. Try again.";
+            } else {
+              showNotification("Microphone error: " + event.error, 'fas fa-exclamation-triangle');
+            }
+          };
 
         recognition.onend = function () {
           micBtn.classList.remove('recording');
@@ -1852,7 +2078,7 @@ import { songs, albums } from './songs-data.js';
           e.preventDefault(); // Stop any bubbling or default actions
 
           if (window.location.protocol === 'file:') {
-            alert("Warning: Voice Search will not work if you opened this file directly from your folder (file://). You must use a local server (http://localhost) for Chrome to allow microphone access.");
+            showNotification("Voice Search won't work on local files. Use a server.", 'fas fa-exclamation-triangle');
           }
 
           if (isRecording) {

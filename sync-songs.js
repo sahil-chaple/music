@@ -88,7 +88,7 @@ async function syncSongs() {
     isTrending: ,
     isPopular: true,
     isNewRelease: ,
-    cover: "${matchingCover}",
+    cover: "${matchingCover.secure_url}",
     file: "${file.secure_url}"
   }`;
     }).join(',\n');

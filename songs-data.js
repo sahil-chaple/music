@@ -271,8 +271,32 @@ export const songs = [
     isNewRelease: true,
     cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777135249/Khat-Hindi-2025-20251130113423-500x500_uzbrf9.jpg",
     file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777135261/Khat_-_Khat_128_kbps_ynsgpr.mp3"
+  },
+  {
+    id: 23,
+    title: "Isq Risk",
+    artist: "Rahat Fateh Ali Khan",
+    albumId: 0,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777186754/xrudilujbyzurcwgg0hx.jpg",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777186715/Isq_Risk_Mere_Brother_Ki_Dulhan_128_Kbps_jrgzl8.mp3"
+  },
+  {
+    id: 24,
+    title: "Chand Sifarish",
+    artist: "Jatin-Lalit",
+    albumId: 0,
+    isTrending: false,
+    isPopular: true,
+    isNewRelease: false,
+    cover: "https://res.cloudinary.com/dbfdls6ub/image/upload/v1777186646/fanaa-jatin-lalit_b48lvk.webp",
+    file: "https://res.cloudinary.com/dbfdls6ub/video/upload/v1777186637/Chand_Sifarish_PenduJatt.Com.Se_tdqui8.mp3"
   }
 ];
+
+
 
 
 
