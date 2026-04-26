@@ -296,10 +296,8 @@ import { songs, albums } from './songs-data.js';
       const isLiked = likedSongs.includes(song.id);
       return `
         <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-          <div style="position:absolute; top:8px; right:8px; z-index:10; display: flex; gap: 8px;">
-            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px; margin-top: 5px;"></i>' : ''}
-            <button class="song-options-btn" data-song-id="${song.id}" style="position:static;"><i class="fas fa-ellipsis-v"></i></button>
-          </div>
+          <button class="song-options-btn" data-song-id="${song.id}" style="position:absolute; top:8px; right:8px; z-index:10;"><i class="fas fa-ellipsis-v"></i></button>
+          ${isLiked ? '<i class="fas fa-heart liked-heart-icon" style="position:absolute; bottom:45px; right:10px; color: var(--accent); font-size: 16px; z-index:10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>' : ''}
           <img class="card-cover" src="${song.cover}" alt="${song.title}">
           <div class="card-title">${song.title}</div>
           <div class="card-artist">${song.artist}</div>
@@ -402,10 +400,8 @@ import { songs, albums } from './songs-data.js';
       const isLiked = likedSongs.includes(song.id);
       return `
         <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
-          <div style="position:absolute; top:8px; right:8px; z-index:10; display: flex; gap: 8px;">
-            ${isLiked ? '<i class="fas fa-heart" style="color: var(--accent); font-size: 14px; margin-top: 5px;"></i>' : ''}
-            <button class="song-options-btn" data-song-id="${song.id}" style="position:static;"><i class="fas fa-ellipsis-v"></i></button>
-          </div>
+          <button class="song-options-btn" data-song-id="${song.id}" style="position:absolute; top:8px; right:8px; z-index:10;"><i class="fas fa-ellipsis-v"></i></button>
+          ${isLiked ? '<i class="fas fa-heart liked-heart-icon" style="position:absolute; bottom:45px; right:10px; color: var(--accent); font-size: 16px; z-index:10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>' : ''}
           <img class="card-cover" src="${song.cover}" alt="${song.title}">
           <div class="card-title">${song.title}</div>
           <div class="card-artist">${song.artist}</div>
@@ -507,9 +503,11 @@ import { songs, albums } from './songs-data.js';
   }
 
   function buildCardHTML(song) {
+    const isLiked = likedSongs.includes(song.id);
     return `
       <div class="song-card ${songs[currentSongIndex] && songs[currentSongIndex].id === song.id ? 'playing' : ''}" data-song-id="${song.id}">
         <button class="song-options-btn" data-song-id="${song.id}" style="position:absolute; top:8px; right:8px; z-index:10;"><i class="fas fa-ellipsis-v"></i></button>
+        ${isLiked ? '<i class="fas fa-heart liked-heart-icon" style="position:absolute; bottom:45px; right:10px; color: var(--accent); font-size: 16px; z-index:10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>' : ''}
         <div class="card-3d-wrapper">
           <img class="card-cover" src="${song.cover}" alt="${song.title}">
           <div class="card-title">${song.title}</div>
@@ -1584,24 +1582,29 @@ import { songs, albums } from './songs-data.js';
   function updateAllVisibleHearts(songId, isLikedNow) {
     const instances = document.querySelectorAll(`[data-song-id="${songId}"]`);
     instances.forEach(instance => {
-      // Find the button to use as a reference point
-      const btn = instance.querySelector('.song-options-btn');
-      if (!btn) return;
-      
-      const container = btn.parentElement;
-      const existingHeart = container.querySelector('.fa-heart');
+      const existingHeart = instance.querySelector('.fa-heart:not(.fa-heart-broken)');
       
       if (isLikedNow) {
         if (!existingHeart) {
           const heart = document.createElement('i');
-          heart.className = 'fas fa-heart';
+          heart.className = 'fas fa-heart liked-heart-icon';
           heart.style.color = 'var(--accent)';
-          heart.style.fontSize = '14px';
-          // Check if it's a card (absolute) or track item (flex)
+          heart.style.zIndex = '10';
+          
           if (instance.classList.contains('song-card')) {
-             heart.style.marginTop = '5px';
+             heart.style.position = 'absolute';
+             heart.style.bottom = '45px';
+             heart.style.right = '10px';
+             heart.style.fontSize = '16px';
+             heart.style.filter = 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))';
+             instance.appendChild(heart);
+          } else if (instance.classList.contains('track-item')) {
+             heart.style.fontSize = '14px';
+             const optionsBtn = instance.querySelector('.song-options-btn');
+             if (optionsBtn) {
+               optionsBtn.parentElement.insertBefore(heart, optionsBtn);
+             }
           }
-          container.insertBefore(heart, btn);
         }
       } else {
         if (existingHeart) existingHeart.remove();
