@@ -1555,6 +1555,7 @@ import { songs, albums } from './songs-data.js';
   function nextSong() {
     if (playQueue.length > 0) {
       const nextId = playQueue.shift();
+      saveQueueToStorage(); // Save updated queue after shifting
       const idx = songs.findIndex(s => s.id === nextId);
       if (idx !== -1) {
         loadSong(idx);
@@ -1610,6 +1611,10 @@ import { songs, albums } from './songs-data.js';
         if (existingHeart) existingHeart.remove();
       }
     });
+  }
+
+  function saveQueueToStorage() {
+    localStorage.setItem('playQueue', JSON.stringify(playQueue));
   }
 
   function showNotification(message, icon = 'fas fa-info-circle') {
@@ -1688,6 +1693,16 @@ import { songs, albums } from './songs-data.js';
       }, { once: true });
     }
 
+    const savedQueue = localStorage.getItem('playQueue');
+    if (savedQueue) {
+      try {
+        playQueue = JSON.parse(savedQueue);
+      } catch (e) {
+        console.error("Error parsing saved queue:", e);
+        playQueue = [];
+      }
+    }
+
     // Initialize shuffle queue from current song
     buildShuffleQueue(currentSongIndex);
     // Set shuffle button state visually
@@ -1730,6 +1745,7 @@ import { songs, albums } from './songs-data.js';
         // Remove if already exists to move to top (prevent duplicates)
         playQueue = playQueue.filter(id => id !== songId);
         playQueue.unshift(songId);
+        saveQueueToStorage();
         queueMenu.classList.remove('active');
         showNotification('Added to Play Next', 'fas fa-step-forward');
         if (detailTitle.textContent === 'Current Queue' && currentActiveView === 'library' && tracklistView.style.display === 'block') {
@@ -1747,6 +1763,7 @@ import { songs, albums } from './songs-data.js';
           playQueue.push(songId);
           showNotification('Added to Queue', 'fas fa-list');
         }
+        saveQueueToStorage();
         queueMenu.classList.remove('active');
         
         // Refresh view if in Queue view
