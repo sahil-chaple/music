@@ -1434,6 +1434,9 @@ import { songs, albums } from './songs-data.js';
   }
 
   async function toggleLike(targetId = null) {
+    // Handle cases where an event object is passed from addEventListener
+    if (targetId && typeof targetId === 'object') targetId = null;
+    
     const songId = targetId !== null ? targetId : songs[currentSongIndex].id;
     const isLiked = likedSongs.includes(songId);
 
