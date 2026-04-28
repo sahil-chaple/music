@@ -265,16 +265,43 @@ import { songs, albums } from './songs-data.js';
     const homeDashboard = document.getElementById('homeDashboard');
     const searchResults = document.getElementById('searchResults');
 
-    // If searching, always switch to home view to show results
     if (q.length > 0) {
       if (currentActiveView !== 'home') switchView('home');
       homeDashboard.style.display = 'none';
       searchResults.style.display = 'block';
 
-      filteredSongs = songs.filter(song =>
-        song.title.toLowerCase().includes(q) ||
-        song.artist.toLowerCase().includes(q)
-      );
+      const queryWords = q.split(/\s+/).filter(w => w.length > 0);
+
+      filteredSongs = songs.map(song => {
+        const title = song.title.toLowerCase();
+        const artist = song.artist.toLowerCase();
+        let score = 0;
+
+        // 1. Exact matches (Highest priority)
+        if (title === q) score += 100;
+        else if (title.startsWith(q)) score += 80;
+        else if (title.includes(q)) score += 60;
+
+        // 2. Artist matches
+        if (artist === q) score += 50;
+        else if (artist.includes(q)) score += 40;
+
+        // 3. Word-based matching (Supports "aari aari song" matching "aari aari")
+        queryWords.forEach(word => {
+          if (title.includes(word)) score += 15;
+          if (artist.includes(word)) score += 5;
+        });
+
+        // 4. Reverse check: Title or Artist contained in query
+        // This is specifically for when voice search adds extra words like "song"
+        if (q.includes(title) && title.length > 2) score += 40;
+
+        return { song, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.song);
+
       renderCards(filteredSongs);
     } else {
       homeDashboard.style.display = 'flex';

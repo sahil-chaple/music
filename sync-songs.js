@@ -80,15 +80,18 @@ async function syncSongs() {
         return songSlug === imgSlug || songSlug.includes(imgSlug) || imgSlug.includes(songSlug);
       });
 
+      // 🎨 Fallback cover if no match found
+      const coverUrl = matchingCover ? matchingCover.secure_url : "https://res.cloudinary.com/dbfdls6ub/image/upload/v1776687172/Dhurandhar-title-track_wolv0w.jpg";
+
       return `  {
     id: ${lastId + index + 1},
     title: "${title}",
-    artist: "",
+    artist: "Various Artists",
     albumId: 0,
-    isTrending: ,
+    isTrending: false,
     isPopular: true,
-    isNewRelease: ,
-    cover: "${matchingCover.secure_url}",
+    isNewRelease: true,
+    cover: "${coverUrl}",
     file: "${file.secure_url}"
   }`;
     }).join(',\n');
