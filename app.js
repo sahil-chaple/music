@@ -2034,6 +2034,13 @@ import { songs, albums } from './songs-data.js';
 
     document.querySelectorAll('.app-footer a').forEach(link => {
       link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        
+        // If it's a real link (not just '#'), let it function normally
+        if (href && href !== '#' && href !== '') {
+          return;
+        }
+
         e.preventDefault();
         const topic = link.textContent.trim();
 
@@ -2043,11 +2050,11 @@ import { songs, albums } from './songs-data.js';
           return;
         }
 
-        infoModalTitle.textContent = topic;
+        infoModalTitle.textContent = topic || "Information";
         infoModalContent.innerHTML = `
-          <p>This is the informational page for <strong>${topic}</strong>.</p>
+          <p>This is the informational page for <strong>${topic || 'this section'}</strong>.</p>
           <p>Currently, StreamWave is in beta. Detailed policies, job listings, and community guidelines for this section are being finalized.</p>
-          <p>Please check back later for full documentation and resources regarding ${topic}.</p>
+          <p>Please check back later for full documentation and resources regarding ${topic || 'it'}.</p>
         `;
         infoModalOverlay.classList.add('active');
       });
